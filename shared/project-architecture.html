@@ -145,7 +145,7 @@ td .tier { margin-left: 0; }
 
 <h2>그림 — 전체 구조</h2>
 <figure>
-<svg class="arch" viewBox="0 0 1200 559" role="img" aria-label="아키텍처: 수집, 분석(추출만), 서비스(가공 · 서비스 제공, 가운데 원본 DB: 프롬프트 · 측정 설정은 수집이, 분석 기준정보는 분석이 API로 읽음), 데이터 파이프라인(계층마다 저장소 하나)">
+<svg class="arch" viewBox="0 0 1200 559" role="img" aria-label="아키텍처: 수집, 분석(추출만), 서비스(가공 · 서비스 제공, 가운데 원본 DB: 프롬프트 · 측정 설정 · 수집 기준정보는 수집이, 분석 기준정보는 분석이 API로 읽음), 데이터 파이프라인(계층마다 저장소 하나)">
   <defs>
     <marker id="b-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0L10 5L0 10z"/></marker>
     <marker id="b-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head-i" d="M0 0L10 5L0 10z"/></marker>
@@ -159,7 +159,7 @@ td .tier { margin-left: 0; }
 
   <!-- 수집 -->
   <rect class="box b-ext" x="40" y="76" width="220" height="56" rx="8"/>
-  <text class="bt" x="150" y="99">입력</text><text class="bs" x="150" y="119">프롬프트 · 측정 설정</text>
+  <text class="bt" x="150" y="99">입력</text><text class="bs" x="150" y="119">프롬프트 · 측정 설정 · 수집 기준정보</text>
   <rect class="box b-ext" x="40" y="170" width="220" height="70" rx="8"/>
   <text class="bt" x="150" y="196">수집 서버</text><text class="bs" x="150" y="216">AI 엔진에 질의하고</text><text class="bs" x="150" y="232">응답을 받음</text>
   <path class="store bronze" d="M40 297A110 7 0 0 1 260 297V353A110 7 0 0 1 40 353Z"/><path class="rim bronze" d="M40 297A110 7 0 0 0 260 297"/>
@@ -175,7 +175,7 @@ td .tier { margin-left: 0; }
   <path class="store b-svc" d="M790 84A110 7 0 0 1 1010 84V122A110 7 0 0 1 790 122Z"/><path class="rim b-svc" d="M790 84A110 7 0 0 0 1010 84"/>
   <text class="bt" x="900" y="104">프롬프트·기준정보</text><text class="bs" x="900" y="120">원본 · 서비스가 관리</text>
   <path class="flow" d="M788 96H262" marker-end="url(#b-h)"/>
-  <text class="bs" x="450" y="89">프롬프트 · 측정 설정 (API)</text>
+  <text class="bs" x="450" y="89">프롬프트 · 측정 설정 · 수집 기준정보 (API)</text>
   <path class="flow" d="M788 114H450V168" marker-end="url(#b-h)"/>
   <text class="bs" x="458" y="146" style="text-anchor:start">분석 기준정보 (API)</text>
 
@@ -218,7 +218,7 @@ td .tier { margin-left: 0; }
   <!-- 계약 번호는 DB에 붙인다: 빨강 = 다른 팀이 읽는 DB, 회색 = 같은 팀만 읽는 DB -->
   <circle class="c-x" cx="36" cy="296" r="11"/><text class="cn" x="36" y="300">1</text>
   <circle class="c-x" cx="516" cy="416" r="11"/><text class="cn" x="516" y="420">2</text>
-  <circle class="c-i" cx="626" cy="296" r="11"/><text class="cn" x="626" y="300">3</text>
+  <circle class="c-i" cx="766" cy="296" r="11"/><text class="cn" x="766" y="300">3</text>
 
   <!-- 지표 변경 고리 -->
   <path class="loop-i" d="M1050 168V146H750V166" marker-end="url(#b-hi)"/>
@@ -258,18 +258,18 @@ td .tier { margin-left: 0; }
     </table>
   </div>
   <div class="shape">
-    <h4><span class="badge i">3</span>지표 (BFF가 계산)<span class="tier gold">Gold</span></h4>
+    <h4><span class="badge i">3</span>지표 (BFF가 계산, 캐시 DB)</h4>
     <table>
       <tr><th>조회 조건</th><td>2026-10-05 · US · ChatGPT · Hyundai</td></tr>
-      <tr><th>분모 (유효 답변)</th><td class="mono">1,240</td></tr>
-      <tr><th>노출 답변</th><td class="mono">812 → 노출률 65.5%</td></tr>
-      <tr><th>1순위 답변</th><td class="mono">228 → 1순위율 18.4%</td></tr>
-      <tr><th>인용 / 공식(HMG)</th><td class="mono">13,950 / 1,325 → 9.5%</td></tr>
+      <tr><th>대표 답변</th><td class="mono">1,240</td></tr>
+      <tr><th>당사 언급 답변</th><td class="mono">812 → AI 노출률 65.5%</td></tr>
+      <tr><th>언급 순위 3 이하</th><td class="mono">228 → Top 3 노출 비율 28.1%</td></tr>
+      <tr><th>인용 / 공식 (HMG)</th><td class="mono">13,950 / 1,325 → AI 인용 점유율 9.5%</td></tr>
     </table>
   </div>
 </div>
 <p class="shapes-note">값은 예시다.</p>
-<figcaption>파이프라인이 분석팀의 추출 결과를 OBT에 스냅샷으로 적재해 운영에 반영하고, BFF가 운영 스냅샷을 읽어 지표를 계산한다. 서비스가 관리하는 원본은 프롬프트·기준정보 API로 읽는다. 프롬프트 · 측정 설정은 앤써가 수집에, 분석 기준정보는 분석팀이 추출에 쓴다.</figcaption>
+<figcaption>파이프라인이 분석팀의 추출 결과를 OBT에 스냅샷으로 적재해 운영에 반영하고, BFF가 운영 스냅샷을 읽어 지표를 계산한다. 서비스가 관리하는 원본은 프롬프트·기준정보 API로 읽는다. 프롬프트 · 측정 설정 · 수집 기준정보는 앤써가 수집에, 분석 기준정보는 분석팀이 추출에 쓴다. 필터를 건 예시 조회의 결과는 캐시 DB에 둔다.</figcaption>
 </figure>
 
 </section>
@@ -288,12 +288,12 @@ td .tier { margin-left: 0; }
 <h2>2. 계층과 계약</h2>
 <table>
   <tr><th style="width:8%">계층</th><th style="width:15%">저장소</th><th>담는 것</th><th style="width:10%">데이터 생성 주체</th><th style="width:13%">데이터 관리 담당</th><th style="width:21%">데이터 방향</th></tr>
-  <tr><td>—</td><td>프롬프트·기준정보 원본</td><td>프롬프트, 측정 설정, 분석 기준정보</td><td>서비스</td><td>서비스</td><td>서비스 → 앤써 (프롬프트, 측정 설정), 서비스 → 분석 (분석 기준정보). 프롬프트·기준정보 API로 읽음</td></tr>
-  <tr><td><span class="tier bronze">Bronze</span></td><td>응답 원문</td><td>답변 키, 프롬프트, 엔진, 국가, 언어, 측정 시각, 본문, 인용 원문</td><td>수집</td><td>수집</td><td>앤써 → 분석 (계약 1)</td></tr>
+  <tr><td>—</td><td>프롬프트·기준정보 원본 (서비스 DB, Gold DB와 분리)</td><td>프롬프트, 측정 설정, 수집 기준정보, 분석 기준정보</td><td>서비스</td><td>서비스</td><td>서비스 → 수집 (프롬프트, 측정 설정, 수집 기준정보), 서비스 → 분석 (분석 기준정보). 프롬프트·기준정보 API로 읽음</td></tr>
+  <tr><td><span class="tier bronze">Bronze</span></td><td>응답 원문</td><td>답변 키, 프롬프트, 엔진, 국가, 언어, 측정 시각, 본문, 인용 원문</td><td>수집</td><td>수집</td><td>수집 → 분석 (계약 1)</td></tr>
   <tr><td>—</td><td>분석 입력 준비 (임시 DB)</td><td>Bronze 전체 사본(데이터 수급 안정용)</td><td>파이프라인</td><td>파이프라인</td><td>파이프라인 내부 (정본 아님)</td></tr>
   <tr><td><span class="tier silver">Silver</span></td><td>추출 결과 OBT</td><td>답변 1건 = 1행, 추출 컬럼만, 추출 규칙 버전, 스냅샷 ID, 스냅샷 상태</td><td>분석</td><td>파이프라인(주), 분석(부)</td><td>분석 → 서비스 (계약 2)</td></tr>
-  <tr><td><span class="tier gold">Gold</span></td><td>사전 집계 테이블</td><td>필터 없는 초기 화면의 지표 값, 스냅샷 ID · 지표 정의 버전</td><td>서비스</td><td>서비스</td><td>서비스 내부 (계약 아님)</td></tr>
-  <tr><td>—</td><td>캐시 DB</td><td>필터 조회 결과(조회 조건별, 다음 회차 운영 반영 전까지)</td><td>서비스</td><td>서비스</td><td>서비스 내부 (정본 아님)</td></tr>
+  <tr><td><span class="tier gold">Gold</span></td><td>사전 집계 테이블</td><td>필터 없는 초기 화면의 지표 값, 스냅샷 ID · 지표 정의 버전</td><td>서비스(BFF)</td><td>서비스</td><td>서비스 내부 (계약 아님)</td></tr>
+  <tr><td>—</td><td>캐시 DB</td><td>필터 조회 결과(조회 조건별, 다음 회차 운영 반영 전까지)</td><td>서비스(BFF)</td><td>서비스</td><td>서비스 내부 (정본 아님)</td></tr>
 </table>
 <p class="note">계층마다 정본 저장소는 하나다. OBT(One Big Table)는 한 테이블에 컬럼을 많이 두는 방식이며, 데이터 정규화는 하지 않는다. 항목마다 컬럼을 따로 두고, 한 컬럼에 값이 여러 개 들어가야 하면 jsonb로 넣는다(Silver만 해당).</p>
 
@@ -324,8 +324,8 @@ td .tier { margin-left: 0; }
 
 <h2>5. 지표 계산 방식</h2>
 <ul>
-  <li><strong>사전 집계:</strong> 필터 없는 초기 화면 값은 회차마다 미리 전부 계산해 Gold에 둔다.</li>
-  <li><strong>조회 시점 집계:</strong> 필터를 건 조회는 BFF가 OBT 운영 스냅샷에서 전체를 센다. 기간 제한이 없어 첫 조회는 오래 걸릴 수 있다. 결과는 조회 조건별로 캐시 DB에 저장해 같은 회차 안에서 다시 쓴다. 구현 기준: <code>service/cache-db.md</code></li>
+  <li><strong>사전 집계:</strong> 필터 없는 초기 화면 값은 BFF가 회차마다 미리 전부 계산해 Gold에 저장한다.</li>
+  <li><strong>조회 시점 집계:</strong> 필터를 건 조회는 BFF가 OBT 운영 스냅샷에서 전체를 센다. 기간 제한이 없어 첫 조회는 오래 걸릴 수 있다. 결과는 BFF가 조회 조건별로 캐시 DB에 저장해 같은 회차 안에서 다시 쓴다. 구현 기준: <code>service/cache-db.md</code></li>
 </ul>
 
 <h2>6. 운영 원칙</h2>

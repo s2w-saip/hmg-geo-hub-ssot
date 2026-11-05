@@ -14,7 +14,7 @@
 | 서비스 화면 | http://10.0.20.132:8081/ | |
 | 프롬프트·기준정보 API | https://10.0.20.132:8087/ext/ | 내부망(10.x)에서만, GET만. API 키 필요. 자체 서명 인증서. 서비스 코드에서는 `back/ext` |
 
-프롬프트·기준정보 API는 서비스가 저장한 프롬프트와, 수집·가공에 필요한 기준정보(엔진·국가·언어, 분류 체계, 자사 브랜드, 출처 분류, 엔티티 역할, 시드 키워드 등)를 API 키별 범위로 준다. 지표·판정·답변 원문은 주지 않는다.
+프롬프트·기준정보 API는 서비스 DB의 프롬프트 · 측정 설정 · 수집 기준정보(수집이 읽음)와 분석 기준정보(분석이 읽음)를 준다. 지표 · 판정 · 답변 원문은 주지 않는다. 명세는 [service/prompt-reference-api.md](../service/prompt-reference-api.md).
 
 ## 레거시
 
@@ -26,4 +26,5 @@
 
 | 이름 | 위치 |
 |---|---|
-| 서비스 구조, HUB DB ERD, 프롬프트·기준정보 API 명세 | 서비스 저장소 `docs/architecture/hmg-geo-hub-architecture.html` (프롬프트·기준정보 API는 `#ext` 절) |
+| 서비스 구조, HUB DB ERD | 서비스 저장소 `docs/architecture/hmg-geo-hub-architecture.html` |
+| 프롬프트·기준정보 API 명세 | [service/prompt-reference-api.md](../service/prompt-reference-api.md) |
