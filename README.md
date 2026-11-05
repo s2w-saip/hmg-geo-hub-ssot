@@ -32,7 +32,7 @@
 
 ## 처음 읽을 문서
 
-- [shared/metric-processing-options.md](shared/metric-processing-options.md): 지표 가공 구조. 단계와 담당, 데이터 흐름, 팀 간 데이터 계약, 운영 반영, 운영 원칙.
+- [shared/project-architecture.md](shared/project-architecture.md): 지표 가공 구조. 단계와 담당, 데이터 흐름, 팀 간 데이터 계약, 운영 반영, 운영 원칙.
 - [shared/urls.md](shared/urls.md): 저장소, 서비스 주소, 프롬프트·기준정보 API, 레거시 프로젝트.
 
 ## 파일 형식
