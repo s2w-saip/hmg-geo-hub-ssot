@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>지표 가공 구조</title>
+<style>
+:root {
+  --bg: #ffffff; --ink: #1f2937; --muted: #6b7280; --rule: #e5e7eb; --panel: #f9fafb;
+  --box: #ffffff; --line: #4b5563;
+  --ext: #6b7280; --ext-bg: #f3f4f6;
+  --bronze: #a8622b; --bronze-bg: #f8ebe0; --silver: #6b7a8f; --silver-bg: #eef1f5; --gold: #b8860b; --gold-bg: #fbf3d5;
+  --pipe: #2563eb; --pipe-bg: #eff6ff;
+  --ana: #7c3aed; --ana-bg: #f5f3ff;
+  --svc: #0d9488; --svc-bg: #ecfdf5;
+  --cross: #dc2626; --inner: #9ca3af;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115; --ink: #e5e7eb; --muted: #9ca3af; --rule: #2a2f3a; --panel: #161a22;
+    --box: #12151c; --line: #9ca3af;
+    --ext: #9ca3af; --ext-bg: #1c1f26;
+  --bronze: #d6935e; --bronze-bg: #34241a; --silver: #b4c0ce; --silver-bg: #262c35; --gold: #e8c047; --gold-bg: #362e12;
+    --pipe: #60a5fa; --pipe-bg: #14203a;
+    --ana: #a78bfa; --ana-bg: #1f1838;
+    --svc: #2dd4bf; --svc-bg: #0f2a27;
+    --cross: #f87171; --inner: #6b7280;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115; --ink: #e5e7eb; --muted: #9ca3af; --rule: #2a2f3a; --panel: #161a22;
+  --box: #12151c; --line: #9ca3af;
+  --ext: #9ca3af; --ext-bg: #1c1f26;
+  --bronze: #d6935e; --bronze-bg: #34241a; --silver: #b4c0ce; --silver-bg: #262c35; --gold: #e8c047; --gold-bg: #362e12;
+  --pipe: #60a5fa; --pipe-bg: #14203a;
+  --ana: #a78bfa; --ana-bg: #1f1838;
+  --svc: #2dd4bf; --svc-bg: #0f2a27;
+  --cross: #f87171; --inner: #6b7280;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.65 "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 40px 32px 80px; }
+h1 { font-size: 28px; margin: 0 0 6px; }
+h2 { font-size: 20px; margin: 44px 0 12px; padding-top: 16px; border-top: 1px solid var(--rule); }
+h3 { font-size: 16px; margin: 24px 0 8px; }
+p { margin: 8px 0; }
+.lede { color: var(--muted); margin: 0 0 4px; }
+.meta { color: var(--muted); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+th, td { border: 1px solid var(--rule); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel); font-weight: 600; }
+.who { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+.who.ext { background: var(--ext); } .who.pipe { background: var(--pipe); } .who.ana { background: var(--ana); } .who.svc { background: var(--svc); }
+figure { margin: 14px 0 6px; }
+figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+svg.arch { width: 100%; height: auto; display: block; }
+.note { color: var(--muted); font-size: 13px; }
+ol li, ul li { margin: 4px 0; }
+
+.shapes { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 12px; margin-top: 12px; }
+.shape { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; background: var(--panel); }
+.shape h4 { margin: 0 0 2px; font-size: 14px; display: flex; align-items: center; gap: 7px; }
+.badge { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700; flex: none; }
+.badge.x { background: var(--cross); } .badge.i { background: var(--inner); }
+.shape table { font-size: 12px; margin: 6px 0 0; }
+.shape th, .shape td { padding: 3px 6px; }
+.shape td { word-break: keep-all; overflow-wrap: anywhere; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+.shapes-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.tabs { display: flex; gap: 4px; margin: 22px 0 0; border-bottom: 1px solid var(--rule); }
+.tabs button { font: inherit; font-size: 15px; font-weight: 600; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 18px; margin-bottom: -1px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--svc); }
+.tabs button:focus-visible { outline: 2px solid var(--svc); outline-offset: 2px; }
+[role="tabpanel"] > .legend:first-child { margin-top: 20px; }
+/* diagram */
+.arch text { font-family: inherit; fill: var(--ink); }
+.arch .stage { font-size: 17px; font-weight: 700; text-anchor: middle; }
+.arch .owner { font-size: 12.5px; text-anchor: middle; fill: var(--muted); }
+.arch .bt { font-size: 14px; font-weight: 700; text-anchor: middle; }
+.arch .bs { font-size: 12px; text-anchor: middle; fill: var(--muted); }
+.arch .lt { font-size: 14px; font-weight: 700; }
+.arch .ls { font-size: 12.5px; fill: var(--muted); }
+.arch .col-ext { fill: var(--ext-bg); } .arch .col-ana { fill: var(--ana-bg); } .arch .col-svc { fill: var(--svc-bg); }
+.arch .box { fill: var(--box); stroke-width: 1.6; }
+.arch .store { fill: var(--box); stroke-width: 1.6; }
+.arch .rim { fill: none; stroke-width: 1.6; }
+.arch .b-ext { stroke: var(--ext); } .arch .b-pipe { stroke: var(--pipe); } .arch .b-ana { stroke: var(--ana); } .arch .b-svc { stroke: var(--svc); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13px; color: var(--muted); margin: 12px 0 0; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 8px; }
+.legend b { color: var(--ink); margin-right: 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.arch .store.bronze, .arch .rim.bronze { stroke: var(--bronze); stroke-width: 2.2; } .arch .store.bronze { fill: var(--bronze-bg); }
+.arch .store.silver, .arch .rim.silver { stroke: var(--silver); stroke-width: 2.2; } .arch .store.silver { fill: var(--silver-bg); }
+.arch .store.gold, .arch .rim.gold { stroke: var(--gold); stroke-width: 2.2; } .arch .store.gold { fill: var(--gold-bg); }
+.arch .tl { font-size: 12px; font-weight: 700; text-anchor: middle; }
+.arch .tl.bronze { fill: var(--bronze); } .arch .tl.silver { fill: var(--silver); } .arch .tl.gold { fill: var(--gold); }
+.tier { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.tier.bronze { color: var(--bronze); background: var(--bronze-bg); border-color: var(--bronze); }
+.tier.silver { color: var(--silver); background: var(--silver-bg); border-color: var(--silver); }
+.tier.gold { color: var(--gold); background: var(--gold-bg); border-color: var(--gold); }
+td .tier { margin-left: 0; }
+.arch .lane { fill: var(--pipe-bg); stroke: var(--pipe); stroke-width: 1.4; stroke-dasharray: 6 4; }
+.arch .flow { fill: none; stroke: var(--line); stroke-width: 1.6; }
+.arch .loop-i { fill: none; stroke: var(--svc); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.arch .head { fill: var(--line); } .arch .head-i { fill: var(--svc); }
+.arch .c-x { fill: var(--cross); } .arch .c-i { fill: var(--inner); }
+.arch .cn { font-size: 12px; font-weight: 700; text-anchor: middle; fill: #fff; }
+.arch .li { font-size: 12px; font-weight: 700; fill: var(--svc); }
+</style>
+</head>
+<body>
+<main>
+
+
+<h1>지표 가공 구조</h1>
+<p class="lede">분석팀은 추출만 하고, 서비스(BFF)가 지표를 정의하고 계산한다</p>
+<p class="meta">초안 · 2026-11-05 · 대상: 개발팀 전체</p>
+
+<div class="tabs" role="tablist" aria-label="문서 보기">
+  <button type="button" role="tab" id="t-diagram" aria-controls="tab-diagram" aria-selected="true">다이어그램</button>
+  <button type="button" role="tab" id="t-details" aria-controls="tab-details" aria-selected="false" tabindex="-1">자세한 내용</button>
+</div>
+
+<section id="tab-diagram" role="tabpanel" aria-labelledby="t-diagram">
+<div class="legend">
+  <b>범례</b>
+  <span><svg width="36" height="10" aria-hidden="true"><path d="M0 5H29" style="stroke:var(--line);stroke-width:2"/><path d="M28 1L36 5L28 9z" style="fill:var(--line)"/></svg>데이터가 흐름</span>
+  <span><svg width="36" height="10" aria-hidden="true"><path d="M0 5H29" style="stroke:var(--svc);stroke-width:2;stroke-dasharray:5 3"/><path d="M28 1L36 5L28 9z" style="fill:var(--svc)"/></svg>지표 변경이 서비스 안에서 끝남</span>
+  <span><svg width="26" height="14" aria-hidden="true"><rect x="1" y="1" width="24" height="12" rx="3" style="fill:var(--pipe-bg);stroke:var(--pipe);stroke-width:1.4;stroke-dasharray:4 3"/></svg>데이터 파이프라인 영역</span>
+  <span><svg width="26" height="18" aria-hidden="true"><path d="M1 4A12 3 0 0 1 25 4V14A12 3 0 0 1 1 14Z" style="fill:var(--bronze-bg);stroke:var(--bronze);stroke-width:1.8"/><path d="M1 4A12 3 0 0 0 25 4" style="fill:none;stroke:var(--bronze);stroke-width:1.8"/></svg>Bronze DB · 수집한 그대로</span>
+  <span><svg width="26" height="18" aria-hidden="true"><path d="M1 4A12 3 0 0 1 25 4V14A12 3 0 0 1 1 14Z" style="fill:var(--silver-bg);stroke:var(--silver);stroke-width:1.8"/><path d="M1 4A12 3 0 0 0 25 4" style="fill:none;stroke:var(--silver);stroke-width:1.8"/></svg>Silver DB · 추출 결과</span>
+  <span><svg width="26" height="18" aria-hidden="true"><path d="M1 4A12 3 0 0 1 25 4V14A12 3 0 0 1 1 14Z" style="fill:var(--gold-bg);stroke:var(--gold);stroke-width:1.8"/><path d="M1 4A12 3 0 0 0 25 4" style="fill:none;stroke:var(--gold);stroke-width:1.8"/></svg>Gold DB · 사전 집계</span>
+  <span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" style="fill:var(--cross)"/></svg>다른 팀이 읽는 DB (팀 간 계약)</span>
+  <span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" style="fill:var(--inner)"/></svg>같은 팀만 읽는 DB</span>
+</div>
+
+
+<h2>그림 — 전체 구조</h2>
+<figure>
+<svg class="arch" viewBox="0 0 1200 535" role="img" aria-label="아키텍처: 수집, 분석(추출만), 가공(BFF), 서비스 제공, 데이터 파이프라인(계층마다 저장소 하나)">
+  <defs>
+    <marker id="b-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0L10 5L0 10z"/></marker>
+    <marker id="b-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head-i" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="col-ext" x="20" y="10" width="260" height="360" rx="12"/>
+  <rect class="col-ana" x="320" y="10" width="260" height="360" rx="12"/>
+  <rect class="col-svc" x="620" y="10" width="260" height="360" rx="12"/>
+  <rect class="col-svc" x="920" y="10" width="260" height="360" rx="12"/>
+  <text class="stage" x="150" y="38">수집</text><text class="owner" x="150" y="58">앤써</text>
+  <text class="stage" x="450" y="38">분석 (추출만)</text><text class="owner" x="450" y="58">분석 · 신민철 · 박보규</text>
+  <text class="stage" x="750" y="38">가공</text><text class="owner" x="750" y="58">서비스 · 김태호</text>
+  <text class="stage" x="1050" y="38">서비스 제공</text><text class="owner" x="1050" y="58">서비스 · 김태호</text>
+
+  <!-- 수집 -->
+  <rect class="box b-ext" x="40" y="76" width="220" height="56" rx="8"/>
+  <text class="bt" x="150" y="99">입력</text><text class="bs" x="150" y="119">프롬프트 · 측정 설정</text>
+  <rect class="box b-ext" x="40" y="170" width="220" height="70" rx="8"/>
+  <text class="bt" x="150" y="196">수집 서버</text><text class="bs" x="150" y="216">AI 엔진에 질의하고</text><text class="bs" x="150" y="232">응답을 받음</text>
+  <path class="store bronze" d="M40 297A110 7 0 0 1 260 297V353A110 7 0 0 1 40 353Z"/><path class="rim bronze" d="M40 297A110 7 0 0 0 260 297"/>
+  <text class="bt" x="150" y="322">응답 원문</text><text class="bs" x="150" y="340">답변 본문 · 인용 원문 · 측정 메타</text><text class="tl bronze" x="150" y="355">Bronze</text>
+  <path class="flow" d="M150 132V168" marker-end="url(#b-h)"/>
+  <path class="flow" d="M150 240V288" marker-end="url(#b-h)"/>
+
+  <!-- 분석 -->
+  <rect class="box b-ana" x="340" y="170" width="220" height="70" rx="8"/>
+  <text class="bt" x="450" y="196">AI 모델 추출</text><text class="bs" x="450" y="216">엔티티 · 감성 · 언급 유형</text><text class="bs" x="450" y="232">순위 · 출처 분류</text>
+
+  <!-- 가공 (BFF) -->
+  <rect class="box b-svc" x="640" y="170" width="220" height="70" rx="8"/>
+  <text class="bt" x="750" y="196">BFF 지표 계산</text><text class="bs" x="750" y="216">지표 정의 · 조회 시점 집계</text><text class="bs" x="750" y="232">결과 캐시</text>
+  <path class="store gold" d="M640 297A110 7 0 0 1 860 297V353A110 7 0 0 1 640 353Z"/><path class="rim gold" d="M640 297A110 7 0 0 0 860 297"/>
+  <text class="bt" x="750" y="322">사전 집계 테이블</text><text class="bs" x="750" y="340">집계 비용이 큰 지표만 · 서비스 소유</text><text class="tl gold" x="750" y="355">Gold</text>
+  <path class="flow" d="M750 242V288" marker-start="url(#b-h)" marker-end="url(#b-h)"/>
+
+  <!-- 서비스 제공 -->
+  <rect class="box b-svc" x="940" y="170" width="220" height="70" rx="8"/>
+  <text class="bt" x="1050" y="196">BFF</text><text class="bs" x="1050" y="216">화면 조립</text><text class="bs" x="1050" y="232">API</text>
+  <rect class="box b-svc" x="940" y="290" width="105" height="56" rx="8"/>
+  <text class="bt" x="992" y="323">웹 화면</text>
+  <rect class="box b-svc" x="1055" y="290" width="105" height="56" rx="8"/>
+  <text class="bt" x="1107" y="323">지표 API</text>
+  <path class="flow" d="M992 240V288" marker-end="url(#b-h)"/>
+  <path class="flow" d="M1107 240V288" marker-end="url(#b-h)"/>
+
+  <!-- 데이터 파이프라인: 계층마다 저장소 하나, 쓰는 것은 파이프라인뿐 -->
+  <rect class="lane" x="20" y="390" width="1160" height="130" rx="10"/>
+  <text class="lt" x="40" y="447">데이터 파이프라인</text>
+  <text class="ls" x="40" y="467">이시형 · 김혜민</text>
+  <rect class="box b-pipe" x="200" y="417" width="200" height="70" rx="8"/>
+  <text class="bt" x="300" y="443">분석 입력 준비</text><text class="bs" x="300" y="463">수집 데이터를 받아</text><text class="bs" x="300" y="479">분석이 쓸 수 있게 정리</text>
+  <path class="store silver" d="M520 417A80 7 0 0 1 680 417V473A80 7 0 0 1 520 473Z"/><path class="rim silver" d="M520 417A80 7 0 0 0 680 417"/>
+  <text class="bt" x="600" y="442">추출 결과 (OBT)</text><text class="bs" x="600" y="460">loading → ready → public</text><text class="tl silver" x="600" y="475">Silver</text>
+  <rect class="box b-pipe" x="760" y="417" width="200" height="70" rx="8"/>
+  <text class="bt" x="860" y="443">운영 반영</text><text class="bs" x="860" y="463">검증 → ready → public</text><text class="bs" x="860" y="479">매니페스트 기록</text>
+  <path class="flow" d="M758 452H682" marker-end="url(#b-h)"/>
+
+  <!-- 흐름 -->
+  <path class="flow" d="M230 360V415" marker-end="url(#b-h)"/>
+  <path class="flow" d="M300 417V205H338" marker-end="url(#b-h)"/>
+  <path class="flow" d="M540 240V408" marker-end="url(#b-h)"/>
+  <path class="flow" d="M600 410V215H638" marker-end="url(#b-h)"/>
+  <path class="flow" d="M860 188H938" marker-end="url(#b-h)"/>
+  <!-- 계약 번호는 DB에 붙인다: 빨강 = 다른 팀이 읽는 DB, 회색 = 같은 팀만 읽는 DB -->
+  <circle class="c-x" cx="36" cy="296" r="11"/><text class="cn" x="36" y="300">1</text>
+  <circle class="c-x" cx="516" cy="416" r="11"/><text class="cn" x="516" y="420">2</text>
+  <circle class="c-i" cx="636" cy="296" r="11"/><text class="cn" x="636" y="300">3</text>
+
+  <!-- 지표 변경 고리 -->
+  <path class="loop-i" d="M1050 168V146H750V166" marker-end="url(#b-hi)"/>
+  <text class="li" x="780" y="138">새 지표 · 필터 · 분모 변경 → 서비스 안에서 끝남</text>
+</svg>
+<div class="shapes">
+  <div class="shape">
+    <h4><span class="badge x">1</span>응답 원문 (답변 1건)<span class="tier bronze">Bronze</span></h4>
+    <table>
+      <tr><th>answer_key</th><td class="mono">8812031</td></tr>
+      <tr><th>프롬프트</th><td>best 3-row SUV for families</td></tr>
+      <tr><th>엔진</th><td>ChatGPT</td></tr>
+      <tr><th>국가</th><td>US</td></tr>
+      <tr><th>언어</th><td>en</td></tr>
+      <tr><th>측정 시각</th><td class="mono">2026-10-05 09:12</td></tr>
+      <tr><th>본문</th><td>“1. <b>Kia Telluride</b> – roomy, top safety picks … 2. <b>Hyundai Palisade</b> … 3. Toyota Grand Highlander … [1][2][3]”</td></tr>
+      <tr><th>인용 원문</th><td class="mono">[1] kia.com/us/telluride<br>[2] caranddriver.com/…<br>[3] edmunds.com/…</td></tr>
+    </table>
+  </div>
+  <div class="shape">
+    <h4><span class="badge x">2</span>추출 결과 (OBT) · 답변 1건 = 1행<span class="tier silver">Silver</span></h4>
+    <table>
+      <tr><th>answer_key</th><td class="mono">8812031</td></tr>
+      <tr><th>프롬프트</th><td>best 3-row SUV …</td></tr>
+      <tr><th>엔진</th><td>ChatGPT</td></tr>
+      <tr><th>국가</th><td>US</td></tr>
+      <tr><th>회차</th><td class="mono">2026-10-05</td></tr>
+      <tr><th>언급 브랜드 (jsonb)</th><td class="mono">[{"브랜드": "Kia", "순위": 1, "감성": "긍정", "유형": "추천"},<br>{"브랜드": "Hyundai", "순위": 2, "감성": "긍정", "유형": "비교"},<br>{"브랜드": "Toyota", "순위": 3, "감성": "중립", "유형": "언급"}]</td></tr>
+      <tr><th>인용 (jsonb)</th><td class="mono">[{"url": "kia.com/us/telluride", "출처 분류": "공식 HMG"},<br>{"url": "caranddriver.com/…", "출처 분류": "자동차 미디어"},<br>{"url": "edmunds.com/…", "출처 분류": "리뷰·비교"}]</td></tr>
+      <tr><th>…</th><td>추출 컬럼이 더 있음</td></tr>
+    </table>
+  </div>
+  <div class="shape">
+    <h4><span class="badge i">3</span>지표 (BFF가 계산)<span class="tier gold">Gold</span></h4>
+    <table>
+      <tr><th>조회 조건</th><td>2026-10-05 · US · ChatGPT · Hyundai</td></tr>
+      <tr><th>분모 (유효 답변)</th><td class="mono">1,240</td></tr>
+      <tr><th>노출 답변</th><td class="mono">812 → 노출률 65.5%</td></tr>
+      <tr><th>1순위 답변</th><td class="mono">228 → 1순위율 18.4%</td></tr>
+      <tr><th>인용 / 공식(HMG)</th><td class="mono">13,950 / 1,325 → 9.5%</td></tr>
+    </table>
+  </div>
+</div>
+<p class="shapes-note">값은 예시다.</p>
+<figcaption>파이프라인이 분석팀의 추출 결과를 OBT에 스냅샷으로 적재해 운영에 반영하고, BFF가 운영 스냅샷을 읽어 지표를 계산한다.</figcaption>
+</figure>
+
+</section>
+
+<section id="tab-details" role="tabpanel" aria-labelledby="t-details" hidden>
+<h2>1. 단계와 담당</h2>
+<table>
+  <tr><th style="width:16%">단계</th><th style="width:44%">하는 일</th><th>담당</th></tr>
+  <tr><td>수집</td><td>AI 엔진에 질의, 응답 수신</td><td><span class="who ext"></span>앤써</td></tr>
+  <tr><td>분석</td><td>응답에서 정보 추출 (AI 모델)</td><td><span class="who ana"></span>신민철 · 박보규</td></tr>
+  <tr><td>가공</td><td>추출 결과를 정의대로 집계해 지표 계산</td><td><span class="who svc"></span>서비스 · 김태호 (BFF)</td></tr>
+  <tr><td>서비스 제공</td><td>화면, 지표 API</td><td><span class="who svc"></span>서비스 · 김태호</td></tr>
+  <tr><td>데이터 파이프라인</td><td>분석 입력 준비, OBT 스냅샷 적재 · 운영 반영</td><td><span class="who pipe"></span>이시형 · 김혜민</td></tr>
+</table>
+
+<h2>2. 계층과 계약</h2>
+<table>
+  <tr><th style="width:9%">계층</th><th style="width:17%">저장소</th><th>담는 것</th><th style="width:12%">쓰기</th><th style="width:22%">데이터 방향</th></tr>
+  <tr><td><span class="tier bronze">Bronze</span></td><td>응답 원문</td><td>답변 키, 프롬프트, 엔진, 국가, 언어, 측정 시각, 본문, 인용 원문</td><td>앤써</td><td>앤써 → 분석 (계약 1)</td></tr>
+  <tr><td><span class="tier silver">Silver</span></td><td>추출 결과 OBT</td><td>답변 1건 = 1행, 추출 컬럼만, 추출 규칙 버전, 스냅샷 ID, 스냅샷 상태</td><td>파이프라인</td><td>분석 → 서비스 (계약 2)</td></tr>
+  <tr><td><span class="tier gold">Gold</span></td><td>사전 집계 테이블</td><td>집계 비용이 큰 지표의 회차 · 국가 · 엔진 · 브랜드별 값, 스냅샷 ID · 지표 정의 버전</td><td>서비스</td><td>서비스 내부 (계약 아님)</td></tr>
+</table>
+<p class="note">계층마다 저장소는 하나다. OBT(One Big Table)는 한 테이블에 컬럼을 많이 두는 방식일 뿐이며, 데이터 정규화는 한다. 한 컬럼에 값이 여러 개 들어가야 하면 jsonb로 넣는다(Silver만 해당).</p>
+
+<h2>3. 추출과 가공의 경계</h2>
+<table>
+  <tr><th style="width:12%"></th><th>추출 (분석팀)</th><th>가공 (BFF)</th></tr>
+  <tr><td>정의</td><td>응답에서 읽어 낸 정보와 분류</td><td>추출 결과를 집계하는 규칙</td></tr>
+  <tr><td>예</td><td>엔티티 → 브랜드 매핑, 감성, 언급 유형, 언급 순위 · 첫 언급 위치, 인용 URL · 출처 분류</td><td>분모 조건, 자사 여부 판정, 대표 답변 선정, 집계 기간(회차 · 기간), 계산식</td></tr>
+  <tr><td>변경 시점</td><td>모델이 바뀔 때</td><td>화면 요구가 바뀔 때</td></tr>
+</table>
+
+<h2>4. 운영 반영</h2>
+<p>파이프라인은 회차마다 OBT를 새 스냅샷으로 적재한다. 운영 반영은 그 스냅샷을 <code>public</code>(운영 중)으로 바꾸는 일이고, 데이터 복사는 없다.</p>
+<ol>
+  <li>파이프라인이 새 스냅샷을 적재한다(<code>loading</code>, 임시 저장). 화면은 이전 운영 스냅샷을 계속 보여 준다.</li>
+  <li>파이프라인이 행 수 · 필수 컬럼 · 키 중복을 검증하고 <code>ready</code>로 바꾼 뒤 매니페스트(적재 기록)에 적는다.</li>
+  <li>파이프라인이 한 트랜잭션으로 운영 스냅샷 포인터를 바꾼다(<code>public</code>). 이전 스냅샷은 <code>retired</code>가 되고 1~2개만 보관한다.</li>
+  <li>서비스는 매니페스트로 새 스냅샷을 확인하고 사전 집계를 갱신한 뒤 캐시를 비운다.</li>
+  <li>사전 집계가 늦거나 실패하면 BFF가 조회 시점에 Silver에서 집계한다. 느리지만 값은 맞다.</li>
+  <li>롤백할 때는 포인터를 <code>retired</code> 스냅샷으로 돌린다.</li>
+</ol>
+<table>
+  <tr><th style="width:42%">구성 요소</th><th>쓰기</th><th>읽기</th></tr>
+  <tr><td>매니페스트: 회차 · 스냅샷 ID · 행 수 · 추출 규칙 버전 · 상태</td><td>파이프라인</td><td>서비스</td></tr>
+  <tr><td>운영 스냅샷 포인터 (회차마다 한 행)</td><td>파이프라인</td><td>BFF</td></tr>
+  <tr><td>Silver 조회용 인덱스</td><td>서비스 (인덱스 생성 권한만)</td><td>BFF</td></tr>
+</table>
+<p><strong>책임.</strong> 적재가 빠짐없이 됐는지는 파이프라인, 추출 내용은 분석팀, 지표는 서비스가 책임진다. 문제가 생기면 매니페스트와 사전 집계 테이블에 남은 스냅샷 ID · 지표 정의 버전으로 어느 단계 문제인지 찾는다.</p>
+
+<h2>5. 지표 계산 방식</h2>
+<ul>
+  <li><strong>조회 시점 집계:</strong> BFF가 OBT 운영 스냅샷에서 집계하고 캐시한다. 최근 1~4회차 조회가 여기에 해당한다.</li>
+  <li><strong>사전 집계:</strong> 집계 비용이 큰 지표만 회차 단위로 미리 계산해 둔다. 예: 기간 전체 출처 도메인 순위</li>
+</ul>
+
+<h2>6. 운영 원칙</h2>
+<ol>
+  <li><strong>OBT 계약을 고정한다.</strong> 컬럼 · 의미 · 스냅샷 ID를 문서로 두고, 바꿀 때는 미리 알린다.</li>
+  <li><strong>지표는 BFF로만 내보낸다.</strong> 지표 API를 포함해 모든 소비자가 BFF를 거친다.</li>
+  <li><strong>읽는 스냅샷을 고정한다.</strong> BFF는 운영 스냅샷만 읽고, 재분석 결과는 운영 반영 뒤에만 화면에 나온다.</li>
+  <li><strong>지표 정의는 코드와 테스트로 남긴다.</strong> 정의 변경은 분석팀도 리뷰한다.</li>
+</ol>
+</section>
+</main>
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(id, remember) {
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (remember) { try { history.replaceState(null, '', '#' + id.replace('tab-', '')); } catch (e) {} }
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.getAttribute('aria-controls'), true); }); });
+  document.querySelector('.tabs').addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+    next.focus();
+    show(next.getAttribute('aria-controls'), true);
+  });
+  if (location.hash === '#details') show('tab-details', false);
+})();
+</script>
+</body>
+</html>
