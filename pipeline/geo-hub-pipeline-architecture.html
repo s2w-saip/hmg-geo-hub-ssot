@@ -42,6 +42,14 @@
 
   --be: #8a94a3;
 
+  --req: #b83367;
+  --req-line: #efbfd2;
+  --req-tint: #fdf1f6;
+
+  --bff: #2b3a55;
+  --bff-line: #c3cbdb;
+  --bff-tint: #f1f4f9;
+
   --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --mono: "IBM Plex Mono", "IBM Plex Sans KR", ui-monospace, Menlo, monospace;
   color-scheme: light;
@@ -58,7 +66,7 @@ body {
   padding-right: max(20px, env(safe-area-inset-right, 0px));
 }
 .sheet {
-  max-width: 1560px;
+  max-width: 1720px;
   margin-inline: auto;
   padding-block: 40px 64px;
   display: grid;
@@ -88,11 +96,13 @@ h2 { margin: 0; font-size: 23px; font-weight: 700; line-height: 1.3; }
 .lg.ai { border-color: var(--ai); background: var(--ai-tint); }
 .lg.obt { border-color: var(--obt); background: var(--obt-tint); }
 .lg.be { border: 1.5px dashed var(--be); background: var(--paper); }
+.lg.req { border-color: var(--req-line); background: var(--req-tint); }
+.lg.bff { border-color: var(--bff-line); background: var(--bff-tint); }
 
 figure { margin: 0; display: grid; gap: 12px; min-width: 0; }
 .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .dia { display: block; width: 100%; height: auto; }
-.dia-main { min-width: 1120px; }
+.dia-main { min-width: 1200px; }
 .dia-plug { min-width: 960px; max-width: 1240px; }
 figcaption { font-size: 14.5px; color: var(--ink-2); max-width: 92ch; }
 
@@ -129,10 +139,16 @@ figcaption { font-size: 14.5px; color: var(--ink-2); max-width: 92ch; }
 .dia .t-silver { fill: var(--silver); }
 .dia .t-ai { fill: var(--ai); }
 .dia .t-obt { fill: var(--obt); }
+.dia .t-req { fill: var(--req); }
+.dia .t-bff { fill: var(--bff); }
 .dia .t-muted { fill: var(--ink-3); }
 
 /* SVG 도형: 카드 */
 .dia .c-src { fill: var(--paper); stroke: var(--src-line); stroke-width: 1.6; }
+.dia .c-src2 { fill: var(--src-tint); stroke: var(--src); stroke-width: 1.6; }
+.dia .c-src2-dash { fill: var(--src-tint); stroke: var(--src); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.dia .p-req { fill: var(--req-tint); stroke: var(--req-line); stroke-width: 1.2; }
+.dia .p-bff { fill: var(--bff-tint); stroke: var(--bff-line); stroke-width: 1.2; }
 .dia .c-src-dash { fill: var(--paper); stroke: var(--src); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .dia .c-bronze { fill: var(--paper); stroke: var(--bronze); stroke-width: 1.6; }
 .dia .c-silver { fill: var(--paper); stroke: var(--silver); stroke-width: 1.6; }
@@ -181,6 +197,8 @@ figcaption { font-size: 14.5px; color: var(--ink-2); max-width: 92ch; }
 .dia .dot-src { fill: var(--src); }
 .dia .dot-bronze { fill: var(--bronze); }
 .dia .dot-be { fill: var(--be); }
+.dia .dot-req { fill: var(--req); }
+.dia .dot-bff { fill: var(--bff); }
 
 /* SVG 선 */
 .dia .e { fill: none; stroke: var(--ink-2); stroke-width: 1.8; }
@@ -190,6 +208,7 @@ figcaption { font-size: 14.5px; color: var(--ink-2); max-width: 92ch; }
 .dia .e-ai { fill: none; stroke: var(--ai); stroke-width: 2; }
 .dia .e-silver { fill: none; stroke: var(--silver); stroke-width: 2; }
 .dia .e-new { fill: none; stroke: var(--ink-3); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.dia .e-req { fill: none; stroke: var(--req); stroke-width: 2; }
 .dia .e-obt { fill: none; stroke: var(--obt); stroke-width: 1.6; stroke-dasharray: 5 4; }
 .dia .ah { fill: var(--ink-2); }
 .dia .ah-soft { fill: var(--ink-3); }
@@ -197,6 +216,7 @@ figcaption { font-size: 14.5px; color: var(--ink-2); max-width: 92ch; }
 .dia .ah-ai { fill: var(--ai); }
 .dia .ah-silver { fill: var(--silver); }
 .dia .ah-obt { fill: var(--obt); }
+.dia .ah-req { fill: var(--req); }
 
 /* 모듈 구성 */
 .kit { border: 1.6px solid var(--silver-line); border-radius: 10px; overflow: hidden; }
@@ -274,14 +294,14 @@ footer p { margin: 0; max-width: 110ch; }
 
   <header class="head">
     <h1>GEO HUB 파이프라인 아키텍처</h1>
-    <p class="lede">수집 완료된 응답을 회차와 상관없이 Consume해서 Bronze에 Raw로 쌓고, Silver의 분석 모듈을 거쳐 OBT로 만듭니다. Backend는 OBT와 회차 단위 테이블 2개만 조회합니다.</p>
+    <p class="lede">Backend가 프로젝트별 스케줄로 수집을 요청하면, 파이프라인이 수집 완료된 응답을 회차와 상관없이 가져와 Bronze에 Raw로 쌓고, Silver의 분석 모듈을 거쳐 OBT로 만듭니다. Backend는 OBT와 회차 단위 테이블 2개만 조회합니다.</p>
   </header>
 
   <!-- 1. 전체 흐름 -->
   <section aria-labelledby="s-flow">
     <div class="sec-head">
       <h2 id="s-flow">전체 흐름</h2>
-      <p>윗줄은 데이터 흐름, 아랫줄은 회차 ID 기준으로 관리하는 테이블입니다. 각 층 아래에 row 단위를 적었습니다.</p>
+      <p>맨 위는 수집 요청, 가운데 줄은 데이터 흐름, 아랫줄은 회차 ID 기준으로 관리하는 테이블입니다. 각 층 아래에 row 단위를 적었습니다.</p>
     </div>
     <ul class="legend">
       <li><span class="lg src"></span>원천</li>
@@ -289,54 +309,93 @@ footer p { margin: 0; max-width: 110ch; }
       <li><span class="lg silver"></span>Silver · 규칙 기반 모듈</li>
       <li><span class="lg ai"></span>AI 모듈 (LLM 호출)</li>
       <li><span class="lg obt"></span>Backend에 전달하는 테이블</li>
+      <li><span class="lg req"></span>Backend · 수집 요청 · 관리</li>
+      <li><span class="lg bff"></span>Backend · BFF · 대시보드</li>
       <li><span class="lg be"></span>우리 파트 아님</li>
     </ul>
     <figure>
       <div class="scroll">
-        <svg class="dia dia-main" viewBox="0 0 1544 796" role="img" aria-label="앤서 공급 DB(현재)와 수집팀 API(추후)에서 수집 완료 응답을 Consume해 Bronze에 Raw로 적재하고, Silver에서 회차와 무관하게 응답 Raw를 받아 S1·S2·S3 모듈로 분석한 뒤 OBT로 조립한다. 모듈은 KB DB의 기준정보(자사 브랜드 · 엔티티 카탈로그 · 인용 분류 기준, KB 파트 관리)를 참조한다. 회차 ID별 분석 완료 T/F와 회차 ID별 버전 6항목 테이블을 함께 두고 Backend가 세 테이블을 조회한다. 버전 항목은 측정용 프롬프트는 서비스, 인용 출처 · 엔티티 카탈로그는 KB, 나머지는 파이프라인이 관리한다">
+        <svg class="dia dia-main" viewBox="0 0 1664 1096" role="img" aria-label="Backend가 프로젝트별 스케줄로 유닛(프롬프트 × 엔진 × 국가 × 잴 횟수)을 묶어 수집팀 API에 수집을 요청하고, 수집팀이 처리한 결과를 Bronze가 가져간다. 지금 원천은 앤서 공급 DB이고 추후 수집팀 API가 그 자리를 대체한다. 원천에서 수집 완료 응답을 받아 Bronze에 Raw로 적재하고, Silver에서 회차와 무관하게 응답 Raw를 받아 S1·S2·S3 모듈로 분석한 뒤 OBT로 조립한다. 모듈은 KB DB의 기준정보(자사 브랜드 · 엔티티 카탈로그 · 인용 분류 기준, KB 파트 관리)를 참조한다. 회차 ID별 분석 완료 T/F와 회차 ID별 버전 6항목 테이블을 함께 두고 Backend가 세 테이블을 조회한다. 버전 항목은 측정용 프롬프트는 서비스, 인용 출처 · 엔티티 카탈로그는 KB, 나머지는 파이프라인이 관리한다">
           <defs>
             <marker id="m-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
             <marker id="m-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-soft" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="m-ahq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-req" d="M0,0 L10,5 L0,10 z"/></marker>
             <marker id="m-aho" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-obt" d="M0,0 L10,5 L0,10 z"/></marker>
           </defs>
-
-          <!-- 파이프라인 경계 -->
-          <rect class="boundary" x="266" y="14" width="1078" height="766" rx="14"/>
-          <text class="pipe-t" x="282" y="40">PIPELINE · 우리 파트</text>
 
           <!-- ───── ① 원천 ───── -->
           <rect class="b-src" x="20" y="24" width="22" height="22" rx="5"/>
           <text class="badge-t" x="31" y="39.5" text-anchor="middle">1</text>
           <text class="hd" x="50" y="41">원천</text>
 
-          <rect class="c-src" x="20" y="60" width="180" height="90" rx="10"/>
+          <!-- 추후 원천: 수집팀 API (앤서 공급 DB 자리를 대체) -->
+          <rect class="c-src2-dash" x="20" y="60" width="180" height="100" rx="10"/>
+          <text class="small t-src" x="38" y="86" style="font-weight:700">추후</text>
+          <text class="ttl" x="38" y="110">수집팀 API</text>
+          <text class="small" x="38" y="132">유닛마다 AI 엔진에 질의</text>
+          <text class="small" x="38" y="150">결과 저장 · 제공</text>
+
+          <line class="e-dash" x1="110" y1="160" x2="110" y2="356" marker-end="url(#m-ah)"/>
+          <text class="lbl" x="110" y="252" text-anchor="middle">추후 이 자리를 대체</text>
+          <text class="lbl" x="110" y="272" text-anchor="middle" style="font-weight:500">Bronze는 그대로 가져감</text>
+
+          <!-- 수집 요청: Backend → 수집팀 API -->
+          <line class="e-req" x1="1380" y1="110" x2="204" y2="110" marker-end="url(#m-ahq)"/>
+          <text class="lbl t-req" x="1245" y="100" text-anchor="middle">수집 요청</text>
+
+          <rect x="470" y="64" width="640" height="196" rx="10" style="fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.4"/>
+          <text x="488" y="92"><tspan class="ttl">수집 요청에 담는 것</tspan><tspan class="small" dx="10">요청 1건 = 배치 1개 = 유닛 여러 개</tspan></text>
+          <text x="488" y="118"><tspan class="body-b">유닛 1개</tspan><tspan class="body" dx="6">= 프롬프트 × 엔진 × 국가 × 잴 횟수</tspan></text>
+          <rect class="g-plain" x="488" y="130" width="604" height="28"/>
+          <rect class="grid" x="488" y="130" width="604" height="88"/>
+          <line class="grid" x1="488" y1="158" x2="1092" y2="158"/>
+          <line class="grid" x1="488" y1="188" x2="1092" y2="188"/>
+          <line class="grid" x1="788" y1="130" x2="788" y2="218"/>
+          <line class="grid" x1="888" y1="130" x2="888" y2="218"/>
+          <line class="grid" x1="968" y1="130" x2="968" y2="218"/>
+          <text class="col-h" x="500" y="149">프롬프트</text>
+          <text class="col-h" x="800" y="149">엔진</text>
+          <text class="col-h" x="900" y="149">국가</text>
+          <text class="col-h" x="980" y="149">잴 횟수</text>
+          <text class="body" x="500" y="178">best 3-row SUV for families</text>
+          <text class="cell" x="800" y="178">chatgpt</text>
+          <text class="cell" x="900" y="178">US</text>
+          <text class="cell" x="980" y="178">1</text>
+          <text class="body" x="500" y="208">전기 SUV 추천해줘 + 2턴 질문</text>
+          <text class="cell" x="800" y="208">gemini</text>
+          <text class="cell" x="900" y="208">KR</text>
+          <text class="cell" x="980" y="208">10 (ACR)</text>
+          <text class="small" x="488" y="244">함께 보냄: 질문 문장(ACR은 2턴 질문까지) · 우선순위 · 값은 예시</text>
+
+          <!-- 아래는 기존 그림을 300 내린 것 -->
+          <g transform="translate(0,300)">
+
+          <!-- 파이프라인 경계 -->
+          <rect class="boundary" x="266" y="14" width="1078" height="766" rx="14"/>
+          <text class="pipe-t" x="282" y="40">PIPELINE · 우리 파트</text>
+
+          <rect class="c-src2" x="20" y="60" width="180" height="90" rx="10"/>
           <text class="small t-src" x="38" y="86" style="font-weight:700">현재</text>
           <text class="ttl" x="38" y="110">앤서 공급 DB</text>
           <text class="small" x="38" y="132">수집 완료 응답 제공</text>
 
-          <rect class="c-src-dash" x="20" y="166" width="180" height="90" rx="10"/>
-          <text class="small t-src" x="38" y="192" style="font-weight:700">추후</text>
-          <text class="ttl" x="38" y="216">수집팀 API</text>
-          <text class="small" x="38" y="238">회차별 데이터 호출</text>
-
-          <rect class="c-src" x="20" y="272" width="180" height="168" rx="10"/>
-          <text class="ttl" x="38" y="298">넘어오는 데이터</text>
-          <circle class="dot-src" cx="42" cy="321" r="3"/>
-          <text class="body" x="54" y="326">질문 (프롬프트)</text>
-          <circle class="dot-src" cx="42" cy="345" r="3"/>
-          <text class="body" x="54" y="350">응답 원문</text>
-          <circle class="dot-src" cx="42" cy="369" r="3"/>
-          <text class="body" x="54" y="374">인용 URL</text>
-          <circle class="dot-src" cx="42" cy="393" r="3"/>
-          <text class="body" x="54" y="398">엔진 · 국가 · 언어</text>
-          <circle class="dot-src" cx="42" cy="417" r="3"/>
-          <text class="body" x="54" y="422">회차 ID</text>
+          <rect class="c-src" x="20" y="166" width="180" height="168" rx="10"/>
+          <text class="ttl" x="38" y="192">넘어오는 데이터</text>
+          <circle class="dot-src" cx="42" cy="215" r="3"/>
+          <text class="body" x="54" y="220">질문 (프롬프트)</text>
+          <circle class="dot-src" cx="42" cy="239" r="3"/>
+          <text class="body" x="54" y="244">응답 원문</text>
+          <circle class="dot-src" cx="42" cy="263" r="3"/>
+          <text class="body" x="54" y="268">인용 URL</text>
+          <circle class="dot-src" cx="42" cy="287" r="3"/>
+          <text class="body" x="54" y="292">엔진 · 국가 · 언어</text>
+          <circle class="dot-src" cx="42" cy="311" r="3"/>
+          <text class="body" x="54" y="316">회차 ID</text>
 
           <!-- 원천 → Bronze -->
-          <path class="e" d="M200,105 H212 V180 H278" marker-end="url(#m-ah)"/>
-          <path class="e-dash" d="M200,211 H212 V180"/>
-          <rect x="215" y="168" width="62" height="24" rx="12" style="fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.2"/>
-          <text x="246" y="184.5" text-anchor="middle" style="font-size: 12.5px; font-weight: 700">Consume</text>
+          <line class="e" x1="200" y1="105" x2="278" y2="105" marker-end="url(#m-ah)"/>
+          <rect x="208" y="93" width="62" height="24" rx="12" style="fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.2"/>
+          <text x="239" y="109.5" text-anchor="middle" style="font-size: 12.5px; font-weight: 700">Consume</text>
 
           <!-- ───── ② Bronze ───── -->
           <rect class="c-bronze" x="282" y="60" width="214" height="380" rx="10"/>
@@ -349,8 +408,8 @@ footer p { margin: 0; max-width: 110ch; }
           <text class="body-b" x="300" y="188">수집 완료된 응답</text>
           <text class="small" x="300" y="206">인용 · 대화 턴 포함</text>
           <text class="small t-bronze" x="300" y="236" style="font-weight:700">가져오는 주기</text>
-          <text class="body-b" x="300" y="258">30분 polling</text>
-          <text class="small" x="300" y="276">현재 기준 · 확정 필요</text>
+          <text class="body-b" x="300" y="258">10분 polling</text>
+          <text class="small" x="300" y="276">수집 MVP 기준 · 확정 필요</text>
           <text class="small t-bronze" x="300" y="306" style="font-weight:700">회차</text>
           <text class="body-b" x="300" y="328">완료와 무관하게 적재</text>
           <rect class="p-bronze" x="298" y="380" width="182" height="44" rx="8"/>
@@ -591,21 +650,35 @@ footer p { margin: 0; max-width: 110ch; }
           <path class="e" d="M1072,748 H1378" marker-end="url(#m-ah)"/>
           <text class="lbl" x="1200" y="740" text-anchor="middle">조회</text>
 
-          <!-- ───── ⑤ Backend ───── -->
-          <rect class="c-be" x="1380" y="60" width="144" height="706" rx="10"/>
+          </g>
+
+          <!-- ───── ⑤ Backend (수집 요청 + BFF) ───── -->
+          <rect class="c-be" x="1380" y="60" width="264" height="1006" rx="10"/>
           <rect class="b-be" x="1394" y="72" width="22" height="22" rx="5"/>
           <text class="badge-t" x="1405" y="87.5" text-anchor="middle">5</text>
           <text class="hd" x="1424" y="89">Backend</text>
-          <text class="ttl" x="1396" y="134">BFF · 대시보드</text>
-          <circle class="dot-be" cx="1400" cy="161" r="3"/>
-          <text class="body" x="1410" y="166">3개 테이블 조회</text>
-          <circle class="dot-be" cx="1400" cy="187" r="3"/>
-          <text class="body" x="1410" y="192">KPI 집계 · 표출</text>
-          <text class="small" x="1396" y="728">담당: 태호</text>
-          <text class="small" x="1396" y="748">우리 파트 아님</text>
+          <rect class="p-req" x="1392" y="106" width="240" height="186" rx="8"/>
+          <text class="ttl t-req" x="1406" y="134">수집 요청 · 관리</text>
+          <circle class="dot-req" cx="1410" cy="161" r="3"/>
+          <text class="body" x="1420" y="166">프로젝트별 수집 스케줄링</text>
+          <circle class="dot-req" cx="1410" cy="187" r="3"/>
+          <text class="body" x="1420" y="192">유닛을 만들어 요청</text>
+          <circle class="dot-req" cx="1410" cy="213" r="3"/>
+          <text class="body" x="1420" y="218">진행 상태 확인</text>
+          <circle class="dot-req" cx="1410" cy="239" r="3"/>
+          <text class="body" x="1420" y="244">실패한 측정은 다시 요청</text>
+          <text class="small" x="1406" y="274">MVP: mvp-geo-hub-collector</text>
+          <rect class="p-bff" x="1392" y="404" width="240" height="600" rx="8"/>
+          <text class="ttl t-bff" x="1406" y="434">BFF · 대시보드</text>
+          <circle class="dot-bff" cx="1410" cy="461" r="3"/>
+          <text class="body" x="1420" y="466">3개 테이블 조회</text>
+          <circle class="dot-bff" cx="1410" cy="487" r="3"/>
+          <text class="body" x="1420" y="492">KPI 집계 · 표출</text>
+          <text class="small" x="1396" y="1028">담당: 태호</text>
+          <text class="small" x="1396" y="1048">우리 파트 아님</text>
         </svg>
       </div>
-      <figcaption>우리 파트는 점선 안입니다. 수집팀 API는 추후 원천이라 점선 블록으로 따로 두었습니다. 기준정보(자사 브랜드, 엔티티 카탈로그, 인용 분류 기준)는 KB 파트가 관리하고, 우리는 KB DB를 조회합니다. 경쟁사는 엔티티 카탈로그의 역할로 구분합니다. 회차 버전 정보의 관리 줄은 항목별 관리 주체입니다: 측정용 프롬프트는 서비스, 인용 출처 · 엔티티 카탈로그는 KB, 나머지는 파이프라인. 청록 테두리 3개(OBT, 회차 분석 완료, 회차 버전 정보)가 Backend에 넘기는 테이블입니다.</figcaption>
+      <figcaption>우리 파트는 점선 안입니다. Backend가 프로젝트별 스케줄에 맞춰 유닛(프롬프트 × 엔진 × 국가 × 잴 횟수)을 묶어 수집팀 API에 요청하고, 수집팀이 처리한 결과를 Bronze가 가져갑니다. 지금은 앤서 공급 DB에서 가져오고, 추후 수집팀 API가 그 자리를 대체합니다. 기준정보(자사 브랜드, 엔티티 카탈로그, 인용 분류 기준)는 KB 파트가 관리하고, 우리는 KB DB를 조회합니다. 경쟁사는 엔티티 카탈로그의 역할로 구분합니다. 회차 버전 정보의 관리 줄은 항목별 관리 주체입니다: 측정용 프롬프트는 서비스, 인용 출처 · 엔티티 카탈로그는 KB, 나머지는 파이프라인. 청록 테두리 3개(OBT, 회차 분석 완료, 회차 버전 정보)가 Backend에 넘기는 테이블입니다.</figcaption>
     </figure>
   </section>
 
@@ -784,7 +857,7 @@ footer p { margin: 0; max-width: 110ch; }
   </section>
 
   <footer>
-    <p>목표 구조 기준입니다. 현재 develop은 회차 종료 후 실행되고, AI 모듈 4개의 Runner 연결은 개발 중(M09), ACR 집계는 아직 구현 전입니다. Bronze 수집 주기(30분)는 현재 방식 기준이라 확정이 필요하고, 회차 완료 · 버전 테이블의 값은 예시입니다.</p>
+    <p>목표 구조 기준입니다. 현재 develop은 회차 종료 후 실행되고, AI 모듈 4개의 Runner 연결은 개발 중(M09), ACR 집계는 아직 구현 전입니다. 수집 요청 · 수집팀 API 연동은 수집 MVP(mvp-geo-hub-collector)에서 확인한 방식이고, Bronze 적재 주기(10분)는 MVP 기준이라 확정이 필요하고, 회차 완료 · 버전 테이블의 값은 예시입니다.</p>
   </footer>
 </main>
 </body>
