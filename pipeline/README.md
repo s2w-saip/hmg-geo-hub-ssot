@@ -15,3 +15,9 @@
 - OBT 파티션·인덱스 관리
 
 다른 파트도 읽어야 하는 내용은 `shared/`에 둔다.
+
+## 아키텍처
+
+![GEO HUB 파이프라인 아키텍처](geo-hub-pipeline-architecture.png)
+
+원본: [geo-hub-pipeline-architecture.html](geo-hub-pipeline-architecture.html)

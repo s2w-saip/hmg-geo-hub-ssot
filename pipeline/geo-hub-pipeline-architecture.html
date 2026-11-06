@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GEO HUB 파이프라인 아키텍처</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 레이아웃: 흰 시트 위 흰 카드. 층마다 색 테두리 + 번호 배지 + 옅은 색 칸. 색 = 의미 하나씩(원천 회색, Bronze 주황, Silver 파랑, AI 보라, Backend 전달 청록) */
+:root {
+  --paper: #ffffff;
+  --ink: #1f2933;
+  --ink-2: #4b5563;
+  --ink-3: #8a94a3;
+  --line: #d6dbe2;
+  --line-2: #eceff3;
+  --fill: #f5f6f8;
+  --navy: #2b3a55;
+
+  --src: #56657a;
+  --src-line: #c3ccd8;
+  --src-tint: #f2f5f9;
+
+  --bronze: #c0651a;
+  --bronze-line: #edc49c;
+  --bronze-tint: #fdf4ea;
+
+  --silver: #3361d8;
+  --silver-line: #b6c7f2;
+  --silver-tint: #eef3fd;
+
+  --ai: #7a4fc8;
+  --ai-line: #cfbdf0;
+  --ai-tint: #f4effc;
+
+  --obt: #12867a;
+  --obt-line: #9fd6cd;
+  --obt-tint: #eaf7f5;
+  --obt-strong: #cdeee8;
+
+  --be: #8a94a3;
+
+  --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "IBM Plex Sans KR", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+.sheet {
+  max-width: 1560px;
+  margin-inline: auto;
+  padding-block: 40px 64px;
+  display: grid;
+  gap: 56px;
+}
+.head { display: grid; gap: 10px; border-bottom: 1.5px solid var(--ink); padding-bottom: 22px; }
+h1 {
+  margin: 0;
+  font-size: clamp(30px, 3.6vw, 40px);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -.015em;
+}
+.lede { margin: 0; max-width: 76ch; color: var(--ink-2); font-size: 17px; }
+
+section { display: grid; gap: 18px; min-width: 0; }
+h2 { margin: 0; font-size: 23px; font-weight: 700; line-height: 1.3; }
+.sec-head { display: grid; gap: 4px; }
+.sec-head p { margin: 0; color: var(--ink-2); max-width: 84ch; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--ink-2); }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.lg { width: 22px; height: 16px; border-radius: 4px; flex: none; border: 1.8px solid; }
+.lg.src { border-color: var(--src); background: var(--src-tint); }
+.lg.bronze { border-color: var(--bronze); background: var(--bronze-tint); }
+.lg.silver { border-color: var(--silver); background: var(--silver-tint); }
+.lg.ai { border-color: var(--ai); background: var(--ai-tint); }
+.lg.obt { border-color: var(--obt); background: var(--obt-tint); }
+.lg.be { border: 1.5px dashed var(--be); background: var(--paper); }
+
+figure { margin: 0; display: grid; gap: 12px; min-width: 0; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.dia { display: block; width: 100%; height: auto; }
+.dia-main { min-width: 1120px; }
+.dia-plug { min-width: 960px; max-width: 1240px; }
+figcaption { font-size: 14.5px; color: var(--ink-2); max-width: 92ch; }
+
+/* SVG 글자 */
+.dia text { font-family: var(--sans); font-size: 14px; fill: var(--ink); }
+.dia .hd { font-size: 16.5px; font-weight: 700; }
+.dia .hd-sub { font-size: 13.5px; font-weight: 500; fill: var(--ink-3); }
+.dia .ttl { font-size: 15px; font-weight: 700; }
+.dia .chip-t { font-size: 14.5px; font-weight: 600; }
+.dia .body { font-size: 14px; fill: var(--ink-2); }
+.dia .body-b { font-size: 14px; font-weight: 600; fill: var(--ink); }
+.dia .small { font-size: 12.5px; fill: var(--ink-3); }
+.dia .stage { font-size: 13.5px; font-weight: 700; fill: var(--silver); }
+.dia .code { font-family: var(--mono); font-size: 12.5px; fill: var(--ink); }
+.dia .cell { font-family: var(--mono); font-size: 13px; fill: var(--ink-2); }
+.dia .cell-b { font-family: var(--mono); font-size: 13px; font-weight: 700; fill: var(--obt); }
+.dia .col-h { font-size: 13.5px; font-weight: 700; fill: var(--ink); }
+.dia .col-d { font-size: 11.5px; fill: var(--ink-3); }
+.dia .pipe-t { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; fill: var(--ink-3); }
+.dia .lbl { font-size: 13px; font-weight: 600; fill: var(--ink-2); paint-order: stroke; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; }
+.dia .own-t { font-size: 13px; font-weight: 700; fill: var(--ink); }
+.dia .own-t-ext { font-size: 13px; font-weight: 700; fill: var(--ink-2); }
+.dia .badge-t { font-size: 12.5px; font-weight: 700; fill: var(--paper); }
+.dia .ai-t { font-size: 11px; font-weight: 700; fill: var(--paper); letter-spacing: .05em; }
+.dia .mini-t { font-size: 11.5px; font-weight: 700; fill: var(--ink-2); }
+.dia .tf-t { font-family: var(--mono); font-size: 14px; font-weight: 700; fill: var(--obt); }
+.dia .tf-f { font-family: var(--mono); font-size: 14px; font-weight: 700; fill: var(--ink-3); }
+.dia .unit-k { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; }
+.dia .unit-v { font-size: 13.5px; font-weight: 700; fill: var(--ink); }
+.dia .banner-t { font-size: 14px; font-weight: 700; fill: var(--silver); }
+.dia .dev-t { font-size: 12px; font-weight: 600; fill: var(--ink-2); }
+.dia .t-src { fill: var(--src); }
+.dia .t-bronze { fill: var(--bronze); }
+.dia .t-silver { fill: var(--silver); }
+.dia .t-ai { fill: var(--ai); }
+.dia .t-obt { fill: var(--obt); }
+.dia .t-muted { fill: var(--ink-3); }
+
+/* SVG 도형: 카드 */
+.dia .c-src { fill: var(--paper); stroke: var(--src-line); stroke-width: 1.6; }
+.dia .c-src-dash { fill: var(--paper); stroke: var(--src); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.dia .c-bronze { fill: var(--paper); stroke: var(--bronze); stroke-width: 1.6; }
+.dia .c-silver { fill: var(--paper); stroke: var(--silver); stroke-width: 1.6; }
+.dia .c-obt { fill: var(--paper); stroke: var(--obt); stroke-width: 1.8; }
+.dia .c-be { fill: var(--paper); stroke: var(--be); stroke-width: 1.4; stroke-dasharray: 3 4; }
+.dia .own { fill: var(--fill); stroke: var(--ink-3); stroke-width: 1.2; }
+.dia .l-bronze { stroke: var(--bronze-line); stroke-width: 1; }
+.dia .l-silver { stroke: var(--silver-line); stroke-width: 1; }
+.dia .l-obt { stroke: var(--obt-line); stroke-width: 1; }
+.dia .l-src { stroke: var(--src-line); stroke-width: 1; }
+.dia .b-src { fill: var(--src); }
+.dia .b-bronze { fill: var(--bronze); }
+.dia .b-silver { fill: var(--silver); }
+.dia .b-obt { fill: var(--obt); }
+.dia .b-be { fill: var(--be); }
+.dia .b-navy { fill: var(--navy); }
+.dia .boundary { fill: none; stroke: var(--ink-3); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.dia .banner { fill: var(--silver-tint); stroke: var(--silver-line); stroke-width: 1; }
+.dia .p-bronze { fill: var(--bronze-tint); stroke: var(--bronze-line); stroke-width: 1; }
+.dia .p-silver { fill: var(--silver-tint); stroke: var(--silver-line); stroke-width: 1; }
+.dia .p-obt { fill: var(--obt-tint); stroke: var(--obt-line); stroke-width: 1; }
+
+/* SVG 도형: 모듈 */
+.dia .chip { fill: var(--paper); stroke: var(--silver-line); stroke-width: 1.6; }
+.dia .chip-ai { fill: var(--ai-tint); stroke: var(--ai); stroke-width: 1.6; }
+.dia .chip-new { fill: var(--paper); stroke: var(--ink-3); stroke-width: 1.4; stroke-dasharray: 6 4; }
+.dia .ai-tag { fill: var(--ai); }
+.dia .dev { fill: var(--paper); stroke: var(--line); stroke-width: 1; }
+.dia .runner { fill: var(--silver-tint); stroke: var(--silver); stroke-width: 1.6; }
+
+/* SVG 도형: 표 */
+.dia .grid { fill: none; stroke: var(--line); stroke-width: 1; }
+.dia .grid-obt { fill: none; stroke: var(--obt); stroke-width: 1.6; }
+.dia .g-hd { fill: var(--obt-tint); }
+.dia .g-src { fill: var(--src-tint); }
+.dia .g-ai { fill: var(--ai-tint); }
+.dia .g-silver { fill: var(--silver-tint); }
+.dia .g-plain { fill: var(--fill); }
+.dia .changed { fill: var(--obt-strong); }
+.dia .new-col { fill: none; stroke: var(--ink-3); stroke-width: 1.4; stroke-dasharray: 6 4; }
+.dia .bar { fill: var(--obt-line); }
+.dia .bar-src { fill: var(--src-line); }
+.dia .bar-ai { fill: var(--ai-line); }
+.dia .bar-silver { fill: var(--silver-line); }
+.dia .bar-new { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 2; }
+.dia .dot-src { fill: var(--src); }
+.dia .dot-bronze { fill: var(--bronze); }
+.dia .dot-be { fill: var(--be); }
+
+/* SVG 선 */
+.dia .e { fill: none; stroke: var(--ink-2); stroke-width: 1.8; }
+.dia .e-dash { fill: none; stroke: var(--ink-2); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.dia .e-soft { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.dia .e-src { fill: none; stroke: var(--src); stroke-width: 1.8; }
+.dia .e-ai { fill: none; stroke: var(--ai); stroke-width: 2; }
+.dia .e-silver { fill: none; stroke: var(--silver); stroke-width: 2; }
+.dia .e-new { fill: none; stroke: var(--ink-3); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.dia .e-obt { fill: none; stroke: var(--obt); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.dia .ah { fill: var(--ink-2); }
+.dia .ah-soft { fill: var(--ink-3); }
+.dia .ah-src { fill: var(--src); }
+.dia .ah-ai { fill: var(--ai); }
+.dia .ah-silver { fill: var(--silver); }
+.dia .ah-obt { fill: var(--obt); }
+
+/* 모듈 구성 */
+.kit { border: 1.6px solid var(--silver-line); border-radius: 10px; overflow: hidden; }
+.kit h3 {
+  margin: 0;
+  padding: 12px 22px;
+  font-size: 16.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--silver-line);
+}
+.kit h3 .bd {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--silver);
+  color: var(--paper);
+  font-size: 12px;
+  font-weight: 700;
+}
+.kit dl { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.kit dl div { padding: 18px 22px; display: grid; gap: 6px; align-content: start; }
+.kit dl div + div { border-left: 1px solid var(--line-2); }
+.kit dt code {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--silver);
+  background: var(--silver-tint);
+  border-radius: 5px;
+  padding: 1px 8px;
+}
+.kit dt.ai code { color: var(--ai); background: var(--ai-tint); }
+.kit dd { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+.kit .add {
+  margin: 0;
+  padding: 14px 22px;
+  border-top: 1px solid var(--silver-line);
+  background: var(--silver-tint);
+  font-size: 15px;
+}
+.kit .add b { color: var(--silver); }
+.ai-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--paper);
+  background: var(--ai);
+  border-radius: 4px;
+  padding: 0 6px;
+  margin-left: 6px;
+  vertical-align: 2px;
+}
+
+footer { border-top: 1px solid var(--line); padding-top: 16px; font-size: 13.5px; color: var(--ink-3); }
+footer p { margin: 0; max-width: 110ch; }
+
+@media (max-width: 1000px) {
+  .kit dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kit dl div:nth-child(3) { border-left: 0; }
+  .kit dl div:nth-child(n+3) { border-top: 1px solid var(--line-2); }
+}
+@media (max-width: 560px) {
+  .kit dl { grid-template-columns: minmax(0, 1fr); }
+  .kit dl div + div { border-left: 0; border-top: 1px solid var(--line-2); }
+}
+</style>
+</head>
+<body>
+<main class="sheet">
+
+  <header class="head">
+    <h1>GEO HUB 파이프라인 아키텍처</h1>
+    <p class="lede">수집 완료된 응답을 회차와 상관없이 Consume해서 Bronze에 Raw로 쌓고, Silver의 분석 모듈을 거쳐 OBT로 만듭니다. Backend는 OBT와 회차 단위 테이블 2개만 조회합니다.</p>
+  </header>
+
+  <!-- 1. 전체 흐름 -->
+  <section aria-labelledby="s-flow">
+    <div class="sec-head">
+      <h2 id="s-flow">전체 흐름</h2>
+      <p>윗줄은 데이터 흐름, 아랫줄은 회차 ID 기준으로 관리하는 테이블입니다. 각 층 아래에 row 단위를 적었습니다.</p>
+    </div>
+    <ul class="legend">
+      <li><span class="lg src"></span>원천</li>
+      <li><span class="lg bronze"></span>Bronze</li>
+      <li><span class="lg silver"></span>Silver · 규칙 기반 모듈</li>
+      <li><span class="lg ai"></span>AI 모듈 (LLM 호출)</li>
+      <li><span class="lg obt"></span>Backend에 전달하는 테이블</li>
+      <li><span class="lg be"></span>우리 파트 아님</li>
+    </ul>
+    <figure>
+      <div class="scroll">
+        <svg class="dia dia-main" viewBox="0 0 1544 796" role="img" aria-label="앤서 공급 DB(현재)와 수집팀 API(추후)에서 수집 완료 응답을 Consume해 Bronze에 Raw로 적재하고, Silver에서 회차와 무관하게 응답 Raw를 받아 S1·S2·S3 모듈로 분석한 뒤 OBT로 조립한다. 모듈은 KB DB의 기준정보(자사 브랜드 · 엔티티 카탈로그 · 인용 분류 기준, KB 파트 관리)를 참조한다. 회차 ID별 분석 완료 T/F와 회차 ID별 버전 6항목 테이블을 함께 두고 Backend가 세 테이블을 조회한다. 버전 항목은 측정용 프롬프트는 서비스, 인용 출처 · 엔티티 카탈로그는 KB, 나머지는 파이프라인이 관리한다">
+          <defs>
+            <marker id="m-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="m-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-soft" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="m-aho" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-obt" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+
+          <!-- 파이프라인 경계 -->
+          <rect class="boundary" x="266" y="14" width="1078" height="766" rx="14"/>
+          <text class="pipe-t" x="282" y="40">PIPELINE · 우리 파트</text>
+
+          <!-- ───── ① 원천 ───── -->
+          <rect class="b-src" x="20" y="24" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="31" y="39.5" text-anchor="middle">1</text>
+          <text class="hd" x="50" y="41">원천</text>
+
+          <rect class="c-src" x="20" y="60" width="180" height="90" rx="10"/>
+          <text class="small t-src" x="38" y="86" style="font-weight:700">현재</text>
+          <text class="ttl" x="38" y="110">앤서 공급 DB</text>
+          <text class="small" x="38" y="132">수집 완료 응답 제공</text>
+
+          <rect class="c-src-dash" x="20" y="166" width="180" height="90" rx="10"/>
+          <text class="small t-src" x="38" y="192" style="font-weight:700">추후</text>
+          <text class="ttl" x="38" y="216">수집팀 API</text>
+          <text class="small" x="38" y="238">회차별 데이터 호출</text>
+
+          <rect class="c-src" x="20" y="272" width="180" height="168" rx="10"/>
+          <text class="ttl" x="38" y="298">넘어오는 데이터</text>
+          <circle class="dot-src" cx="42" cy="321" r="3"/>
+          <text class="body" x="54" y="326">질문 (프롬프트)</text>
+          <circle class="dot-src" cx="42" cy="345" r="3"/>
+          <text class="body" x="54" y="350">응답 원문</text>
+          <circle class="dot-src" cx="42" cy="369" r="3"/>
+          <text class="body" x="54" y="374">인용 URL</text>
+          <circle class="dot-src" cx="42" cy="393" r="3"/>
+          <text class="body" x="54" y="398">엔진 · 국가 · 언어</text>
+          <circle class="dot-src" cx="42" cy="417" r="3"/>
+          <text class="body" x="54" y="422">회차 ID</text>
+
+          <!-- 원천 → Bronze -->
+          <path class="e" d="M200,105 H212 V180 H278" marker-end="url(#m-ah)"/>
+          <path class="e-dash" d="M200,211 H212 V180"/>
+          <rect x="215" y="168" width="62" height="24" rx="12" style="fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.2"/>
+          <text x="246" y="184.5" text-anchor="middle" style="font-size: 12.5px; font-weight: 700">Consume</text>
+
+          <!-- ───── ② Bronze ───── -->
+          <rect class="c-bronze" x="282" y="60" width="214" height="380" rx="10"/>
+          <rect class="b-bronze" x="298" y="72" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="309" y="87.5" text-anchor="middle">2</text>
+          <text x="328" y="89"><tspan class="hd">Bronze</tspan><tspan class="hd-sub" dx="8">Raw</tspan></text>
+          <line class="l-bronze" x1="282" y1="104" x2="496" y2="104"/>
+          <text class="ttl" x="300" y="134">원본 그대로 적재</text>
+          <text class="small t-bronze" x="300" y="166" style="font-weight:700">가져오는 단위</text>
+          <text class="body-b" x="300" y="188">수집 완료된 응답</text>
+          <text class="small" x="300" y="206">인용 · 대화 턴 포함</text>
+          <text class="small t-bronze" x="300" y="236" style="font-weight:700">가져오는 주기</text>
+          <text class="body-b" x="300" y="258">30분 polling</text>
+          <text class="small" x="300" y="276">현재 기준 · 확정 필요</text>
+          <text class="small t-bronze" x="300" y="306" style="font-weight:700">회차</text>
+          <text class="body-b" x="300" y="328">완료와 무관하게 적재</text>
+          <rect class="p-bronze" x="298" y="380" width="182" height="44" rx="8"/>
+          <text class="unit-k t-bronze" x="312" y="398">ROW 단위</text>
+          <text class="unit-v" x="312" y="416">응답 1건 = 1 row</text>
+
+          <!-- Bronze → Silver -->
+          <line class="e" x1="496" y1="230" x2="548" y2="230" marker-end="url(#m-ah)"/>
+          <text class="lbl" x="522" y="220" text-anchor="middle">응답 Raw</text>
+
+          <!-- ───── ③ Silver ───── -->
+          <rect class="c-silver" x="552" y="60" width="520" height="380" rx="10"/>
+          <rect class="b-silver" x="568" y="72" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="579" y="87.5" text-anchor="middle">3</text>
+          <text x="598" y="89"><tspan class="hd">Silver</tspan><tspan class="hd-sub" dx="10">분석 모듈</tspan></text>
+          <line class="l-silver" x1="552" y1="104" x2="1072" y2="104"/>
+          <rect class="banner" x="568" y="112" width="488" height="32" rx="6"/>
+          <text class="banner-t" x="584" y="133">회차와 상관없이, 수집 완료된 응답 Raw를 받아 바로 처리</text>
+          <text class="body" x="570" y="168">Runner가 응답 1건마다 각 모듈의 Handler 호출</text>
+
+          <text class="stage" x="568" y="192">S1 전처리</text>
+          <text class="stage" x="738" y="192">S2 추출</text>
+          <text class="stage" x="908" y="192">S3 분석</text>
+
+          <!-- S1 -->
+          <rect class="chip" x="568" y="200" width="150" height="46" rx="7"/>
+          <text class="chip-t" x="580" y="220">정규화</text>
+          <text class="small" x="580" y="237">상태 · URL</text>
+          <rect class="chip" x="568" y="256" width="150" height="46" rx="7"/>
+          <text class="chip-t" x="580" y="276">품질 판정</text>
+          <text class="small" x="580" y="293">AI 호출 여부 결정</text>
+
+          <line class="e" x1="718" y1="223" x2="735" y2="223" marker-end="url(#m-ah)"/>
+
+          <!-- S2 -->
+          <rect class="chip-ai" x="738" y="200" width="150" height="46" rx="7"/>
+          <text class="chip-t t-ai" x="750" y="220">언급 추출</text>
+          <rect class="ai-tag" x="848" y="208" width="28" height="17" rx="4"/>
+          <text class="ai-t" x="862" y="220.5" text-anchor="middle">AI</text>
+          <text class="small" x="750" y="237">브랜드 · 제품</text>
+          <rect class="chip" x="738" y="256" width="150" height="46" rx="7"/>
+          <text class="chip-t" x="750" y="276">인용 분류</text>
+          <text class="small" x="750" y="293">카테고리 · 자사 여부</text>
+          <rect class="chip-ai" x="738" y="312" width="150" height="46" rx="7"/>
+          <text class="chip-t t-ai" x="750" y="332">도메인 분류</text>
+          <rect class="ai-tag" x="848" y="320" width="28" height="17" rx="4"/>
+          <text class="ai-t" x="862" y="332.5" text-anchor="middle">AI</text>
+          <text class="small" x="750" y="349">인용 도메인 8종</text>
+
+          <line class="e" x1="888" y1="223" x2="905" y2="223" marker-end="url(#m-ah)"/>
+
+          <!-- S3 -->
+          <rect class="chip-ai" x="908" y="200" width="150" height="46" rx="7"/>
+          <text class="chip-t t-ai" x="920" y="220">감성 분석</text>
+          <rect class="ai-tag" x="1018" y="208" width="28" height="17" rx="4"/>
+          <text class="ai-t" x="1032" y="220.5" text-anchor="middle">AI</text>
+          <text class="small" x="920" y="237">언급별 긍정 · 부정</text>
+          <rect class="chip-ai" x="908" y="256" width="150" height="46" rx="7"/>
+          <text class="chip-t t-ai" x="920" y="276">스탠스 분석</text>
+          <rect class="ai-tag" x="1018" y="264" width="28" height="17" rx="4"/>
+          <text class="ai-t" x="1032" y="276.5" text-anchor="middle">AI</text>
+          <text class="small" x="920" y="293">브랜드별 태도</text>
+          <rect class="chip" x="908" y="312" width="150" height="46" rx="7"/>
+          <text class="chip-t" x="920" y="332">ACR 집계</text>
+          <text class="small" x="920" y="349">반복 질의 묶음</text>
+
+          <rect class="p-silver" x="568" y="380" width="236" height="44" rx="8"/>
+          <text class="unit-k t-silver" x="582" y="398">ROW 단위</text>
+          <text class="unit-v" x="582" y="416">모듈마다 응답 1건 = 1 row</text>
+          <rect class="ai-tag" x="822" y="394" width="28" height="17" rx="4"/>
+          <text class="ai-t" x="836" y="406.5" text-anchor="middle">AI</text>
+          <text class="small" x="858" y="407">LLM(OpenRouter) 호출 모듈</text>
+
+          <!-- Silver → OBT -->
+          <line class="e" x1="1072" y1="230" x2="1124" y2="230" marker-end="url(#m-ah)"/>
+          <text class="lbl" x="1098" y="220" text-anchor="middle">조립</text>
+
+          <!-- ───── ④ OBT ───── -->
+          <rect class="c-obt" x="1128" y="60" width="200" height="380" rx="10"/>
+          <rect class="b-obt" x="1144" y="72" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="1155" y="87.5" text-anchor="middle">4</text>
+          <text x="1174" y="89"><tspan class="hd">OBT</tspan><tspan class="hd-sub" dx="8">One Big Table</tspan></text>
+          <line class="l-obt" x1="1128" y1="104" x2="1328" y2="104"/>
+          <text class="ttl" x="1146" y="134">컬럼 = 모듈 Output</text>
+          <rect class="g-hd" x="1146" y="150" width="166" height="22"/>
+          <rect class="grid" x="1146" y="150" width="166" height="112"/>
+          <line class="grid" x1="1146" y1="172" x2="1312" y2="172"/>
+          <line class="grid" x1="1146" y1="202" x2="1312" y2="202"/>
+          <line class="grid" x1="1146" y1="232" x2="1312" y2="232"/>
+          <line class="grid" x1="1188" y1="150" x2="1188" y2="262"/>
+          <line class="grid" x1="1229" y1="150" x2="1229" y2="262"/>
+          <line class="grid" x1="1270" y1="150" x2="1270" y2="262"/>
+          <text class="mini-t" x="1167" y="165" text-anchor="middle">응답</text>
+          <text class="mini-t t-obt" x="1208" y="165" text-anchor="middle">S1</text>
+          <text class="mini-t t-obt" x="1249" y="165" text-anchor="middle">S2</text>
+          <text class="mini-t t-obt" x="1291" y="165" text-anchor="middle">S3</text>
+          <text class="mini-t" x="1167" y="191" text-anchor="middle">a</text>
+          <text class="mini-t" x="1167" y="221" text-anchor="middle">b</text>
+          <text class="mini-t" x="1167" y="251" text-anchor="middle">c</text>
+          <rect class="bar" x="1196" y="184" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1237" y="184" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1278" y="184" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1196" y="214" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1237" y="214" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1278" y="214" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1196" y="244" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1237" y="244" width="25" height="7" rx="2"/>
+          <rect class="bar" x="1278" y="244" width="25" height="7" rx="2"/>
+          <text class="small" x="1146" y="290">스키마 + 컬럼 설명과</text>
+          <text class="small" x="1146" y="308">함께 Backend에 전달</text>
+          <rect class="p-obt" x="1144" y="380" width="168" height="44" rx="8"/>
+          <text class="unit-k t-obt" x="1158" y="398">ROW 단위</text>
+          <text class="unit-v" x="1158" y="416">분석 응답 1건 = 1 row</text>
+
+          <!-- OBT → 회차 완료 -->
+          <line class="e-obt" x1="1228" y1="440" x2="1228" y2="486" marker-end="url(#m-aho)"/>
+          <text class="lbl t-obt" x="1240" y="468">회차 분석 끝나면 T</text>
+
+          <!-- KB 기준정보 (우리 파트 아님) -->
+          <rect class="c-be" x="20" y="490" width="180" height="276" rx="10"/>
+          <text class="hd" x="38" y="518">KB</text>
+          <text class="ttl" x="38" y="546">기준정보 관리</text>
+          <circle class="dot-be" cx="42" cy="569" r="3"/>
+          <text class="body" x="54" y="574">자사 브랜드</text>
+          <circle class="dot-be" cx="42" cy="595" r="3"/>
+          <text class="body" x="54" y="600">엔티티 카탈로그</text>
+          <text class="small" x="54" y="619">자사 · 경쟁사 역할</text>
+          <circle class="dot-be" cx="42" cy="641" r="3"/>
+          <text class="body" x="54" y="646">인용 분류 기준</text>
+          <text class="small" x="38" y="728">우리는 KB DB를 조회</text>
+          <text class="small" x="38" y="748">우리 파트 아님</text>
+
+          <path class="e-soft" d="M200,527 H222 V462 H620 V444" marker-end="url(#m-ahs)"/>
+          <text class="lbl" x="440" y="456" text-anchor="middle">모듈이 참조</text>
+
+          <!-- ───── 회차 버전 정보 ───── -->
+          <rect class="c-obt" x="282" y="490" width="790" height="276" rx="10"/>
+          <text x="300" y="518"><tspan class="hd">회차 버전 정보</tspan><tspan class="hd-sub" dx="10">회차 ID마다 6개 항목의 버전</tspan></text>
+          <line class="l-obt" x1="282" y1="532" x2="1072" y2="532"/>
+
+          <!-- 관리 주체: 실선 = 파이프라인, 점선 = 우리 파트 아님 -->
+          <text class="col-h" x="310" y="561">관리</text>
+          <rect class="c-be" x="370" y="542" width="68" height="28" rx="6"/>
+          <text class="own-t-ext" x="404" y="561" text-anchor="middle">서비스</text>
+          <rect class="own" x="442" y="542" width="380" height="28" rx="6"/>
+          <text x="456" y="561"><tspan class="own-t">파이프라인</tspan><tspan class="small" dx="10">분석용 프롬프트 · 분석 엔진은 git commit · tag</tspan></text>
+          <rect class="c-be" x="826" y="542" width="228" height="28" rx="6"/>
+          <text x="840" y="561"><tspan class="own-t-ext">KB</tspan><tspan class="small" dx="10">KB DB를 조회</tspan></text>
+
+          <rect class="g-hd" x="298" y="578" width="758" height="48"/>
+          <rect class="changed" x="617" y="661" width="98" height="32"/>
+          <rect class="changed" x="921" y="661" width="134" height="32"/>
+          <rect class="changed" x="369" y="695" width="70" height="32"/>
+          <rect class="changed" x="513" y="695" width="102" height="32"/>
+          <rect class="grid" x="298" y="578" width="758" height="150"/>
+          <line class="grid" x1="298" y1="626" x2="1056" y2="626"/>
+          <line class="grid" x1="298" y1="660" x2="1056" y2="660"/>
+          <line class="grid" x1="298" y1="694" x2="1056" y2="694"/>
+          <line class="grid" x1="368" y1="578" x2="368" y2="728"/>
+          <line class="grid" x1="440" y1="605" x2="440" y2="728"/>
+          <line class="grid" x1="512" y1="578" x2="512" y2="728"/>
+          <line class="grid" x1="616" y1="578" x2="616" y2="728"/>
+          <line class="grid" x1="716" y1="578" x2="716" y2="728"/>
+          <line class="grid" x1="824" y1="578" x2="824" y2="728"/>
+          <line class="grid" x1="920" y1="578" x2="920" y2="728"/>
+
+          <text class="col-h" x="310" y="607">회차 ID</text>
+          <text class="col-h" x="380" y="598">① 프롬프트</text>
+          <text class="col-d" x="380" y="616">측정용</text>
+          <text class="col-d" x="452" y="616">분석용</text>
+          <text class="col-h" x="524" y="598">② 측정 엔진</text>
+          <text class="col-d" x="524" y="616">엔진 · 모델 변경</text>
+          <text class="col-h" x="628" y="598">③ 분석 엔진</text>
+          <text class="col-d" x="628" y="616">AI 모듈 변경</text>
+          <text class="col-h" x="728" y="598">④ 측정 대상</text>
+          <text class="col-d" x="728" y="616">국가 · 언어 · 계정</text>
+          <text class="col-h" x="836" y="598">⑤ 인용 출처</text>
+          <text class="col-d" x="836" y="616">카테고리 변경</text>
+          <text class="col-h" x="932" y="598">⑥ 엔티티 카탈로그</text>
+          <text class="col-d" x="932" y="616">엔티티 추가 · 변경</text>
+
+          <text class="cell" x="310" y="648">cyc-01</text>
+          <text class="cell" x="380" y="648">v3</text>
+          <text class="cell" x="452" y="648">v1.2</text>
+          <text class="cell" x="524" y="648">v2</text>
+          <text class="cell" x="628" y="648">v1.4</text>
+          <text class="cell" x="728" y="648">v1</text>
+          <text class="cell" x="836" y="648">v2</text>
+          <text class="cell" x="932" y="648">v5</text>
+
+          <text class="cell" x="310" y="682">cyc-02</text>
+          <text class="cell" x="380" y="682">v3</text>
+          <text class="cell" x="452" y="682">v1.2</text>
+          <text class="cell" x="524" y="682">v2</text>
+          <text class="cell-b" x="628" y="682">v1.5</text>
+          <text class="cell" x="728" y="682">v1</text>
+          <text class="cell" x="836" y="682">v2</text>
+          <text class="cell-b" x="932" y="682">v6</text>
+
+          <text class="cell" x="310" y="716">cyc-03</text>
+          <text class="cell-b" x="380" y="716">v4</text>
+          <text class="cell" x="452" y="716">v1.2</text>
+          <text class="cell-b" x="524" y="716">v3</text>
+          <text class="cell" x="628" y="716">v1.5</text>
+          <text class="cell" x="728" y="716">v1</text>
+          <text class="cell" x="836" y="716">v2</text>
+          <text class="cell" x="932" y="716">v6</text>
+
+          <rect class="changed" x="298" y="740" width="14" height="14" rx="2" style="stroke: var(--obt-line); stroke-width: 1"/>
+          <text class="small" x="320" y="752">직전 회차보다 버전이 바뀐 항목 · 값은 예시</text>
+
+          <!-- ───── 회차 분석 완료 ───── -->
+          <rect class="c-obt" x="1128" y="490" width="200" height="200" rx="10"/>
+          <text class="hd" x="1146" y="518">회차 분석 완료</text>
+          <line class="l-obt" x1="1128" y1="532" x2="1328" y2="532"/>
+
+          <rect class="g-hd" x="1144" y="542" width="168" height="28"/>
+          <rect class="grid" x="1144" y="542" width="168" height="118"/>
+          <line class="grid" x1="1144" y1="570" x2="1312" y2="570"/>
+          <line class="grid" x1="1144" y1="600" x2="1312" y2="600"/>
+          <line class="grid" x1="1144" y1="630" x2="1312" y2="630"/>
+          <line class="grid" x1="1244" y1="542" x2="1244" y2="660"/>
+          <text class="col-h" x="1156" y="561">회차 ID</text>
+          <text class="col-h" x="1278" y="561" text-anchor="middle">완료</text>
+          <text class="cell" x="1156" y="590">cyc-01</text>
+          <text class="tf-t" x="1278" y="591" text-anchor="middle">T</text>
+          <text class="cell" x="1156" y="620">cyc-02</text>
+          <text class="tf-t" x="1278" y="621" text-anchor="middle">T</text>
+          <text class="cell" x="1156" y="650">cyc-03</text>
+          <text class="tf-f" x="1278" y="651" text-anchor="middle">F</text>
+          <text class="small" x="1146" y="680">F = 아직 수집 · 분석 중</text>
+
+          <!-- → Backend -->
+          <line class="e" x1="1328" y1="230" x2="1378" y2="230" marker-end="url(#m-ah)"/>
+          <text class="lbl" x="1354" y="220" text-anchor="middle">조회</text>
+          <line class="e" x1="1328" y1="600" x2="1378" y2="600" marker-end="url(#m-ah)"/>
+          <text class="lbl" x="1354" y="590" text-anchor="middle">조회</text>
+          <path class="e" d="M1072,748 H1378" marker-end="url(#m-ah)"/>
+          <text class="lbl" x="1200" y="740" text-anchor="middle">조회</text>
+
+          <!-- ───── ⑤ Backend ───── -->
+          <rect class="c-be" x="1380" y="60" width="144" height="706" rx="10"/>
+          <rect class="b-be" x="1394" y="72" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="1405" y="87.5" text-anchor="middle">5</text>
+          <text class="hd" x="1424" y="89">Backend</text>
+          <text class="ttl" x="1396" y="134">BFF · 대시보드</text>
+          <circle class="dot-be" cx="1400" cy="161" r="3"/>
+          <text class="body" x="1410" y="166">3개 테이블 조회</text>
+          <circle class="dot-be" cx="1400" cy="187" r="3"/>
+          <text class="body" x="1410" y="192">KPI 집계 · 표출</text>
+          <text class="small" x="1396" y="728">담당: 태호</text>
+          <text class="small" x="1396" y="748">우리 파트 아님</text>
+        </svg>
+      </div>
+      <figcaption>우리 파트는 점선 안입니다. 수집팀 API는 추후 원천이라 점선 블록으로 따로 두었습니다. 기준정보(자사 브랜드, 엔티티 카탈로그, 인용 분류 기준)는 KB 파트가 관리하고, 우리는 KB DB를 조회합니다. 경쟁사는 엔티티 카탈로그의 역할로 구분합니다. 회차 버전 정보의 관리 줄은 항목별 관리 주체입니다: 측정용 프롬프트는 서비스, 인용 출처 · 엔티티 카탈로그는 KB, 나머지는 파이프라인. 청록 테두리 3개(OBT, 회차 분석 완료, 회차 버전 정보)가 Backend에 넘기는 테이블입니다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 2. 모듈 플러그인 구조 -->
+  <section aria-labelledby="s-plug">
+    <div class="sec-head">
+      <h2 id="s-plug">모듈 = 플러그인 · Handler Output이 OBT 컬럼이 되는 구조</h2>
+      <p>모듈마다 Handler와 Output 스키마를 정의합니다. Runner에 끼우고 빼는 구조라 개발자별로 모듈을 따로 개발해 붙일 수 있고, 각 모듈의 Output은 정의된 OBT 컬럼에 저장됩니다.</p>
+    </div>
+    <figure>
+      <div class="scroll">
+        <svg class="dia dia-plug" viewBox="0 36 1200 564" role="img" aria-label="개발자별로 만든 모듈(handler와 Out 스키마)을 registry에 등록하면 Runner의 슬롯에 끼워지고, Runner가 응답마다 handler를 호출해 각 모듈의 Output을 OBT의 해당 컬럼 묶음에 저장한다. 새 모듈은 빈 슬롯에 끼우고 OBT 컬럼을 추가한다">
+          <defs>
+            <marker id="p-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="p-ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-src" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="p-aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-ai" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="p-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-silver" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="p-ahn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="ah-soft" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+
+          <!-- 줄 이름 -->
+          <rect class="b-navy" x="20" y="74" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="31" y="89.5" text-anchor="middle">1</text>
+          <text class="ttl" x="50" y="91">모듈 개발</text>
+          <text class="small" x="20" y="118">개발자별로 따로 개발</text>
+          <text class="small" x="20" y="136">폴더 하나 = 모듈 하나</text>
+
+          <rect class="b-navy" x="20" y="252" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="31" y="267.5" text-anchor="middle">2</text>
+          <text class="ttl t-silver" x="50" y="269">Runner에 끼우기</text>
+          <text class="small" x="20" y="296">registry 등록 = 끼우기</text>
+          <text class="small" x="20" y="314">등록 해제 = 빼기</text>
+
+          <rect class="b-navy" x="20" y="422" width="22" height="22" rx="5"/>
+          <text class="badge-t" x="31" y="437.5" text-anchor="middle">3</text>
+          <text class="ttl t-obt" x="50" y="439">OBT에 저장</text>
+          <text class="small" x="20" y="466">분석 응답 1건 = 1 row</text>
+          <text class="small" x="20" y="484">Output 필드 = 컬럼</text>
+
+          <!-- ① 입력과 모듈 -->
+          <rect class="c-src" x="220" y="50" width="180" height="120" rx="10"/>
+          <text class="small t-src" x="236" y="76" style="font-weight:700">Input</text>
+          <text class="ttl" x="236" y="100">Bronze 응답 Raw</text>
+          <text class="small" x="236" y="124">회차와 무관하게</text>
+          <text class="small" x="236" y="142">수집 완료분부터</text>
+
+          <rect class="chip-ai" x="420" y="50" width="236" height="120" rx="10"/>
+          <text class="chip-t t-ai" x="436" y="78">언급 추출</text>
+          <rect class="ai-tag" x="514" y="65" width="28" height="17" rx="4"/>
+          <text class="ai-t" x="528" y="77.5" text-anchor="middle">AI</text>
+          <rect class="dev" x="572" y="64" width="72" height="22" rx="11"/>
+          <text class="dev-t" x="608" y="79" text-anchor="middle">개발자 A</text>
+          <text class="code" x="436" y="110">handler(in, settings, llm)</text>
+          <text class="body" x="436" y="140">Out: 언급 집계 · 언급 위치</text>
+
+          <rect class="chip" x="676" y="50" width="236" height="120" rx="10"/>
+          <text class="chip-t t-silver" x="692" y="78">인용 분류</text>
+          <rect class="dev" x="828" y="64" width="72" height="22" rx="11"/>
+          <text class="dev-t" x="864" y="79" text-anchor="middle">개발자 B</text>
+          <text class="code" x="692" y="110">handler(in, settings)</text>
+          <text class="body" x="692" y="140">Out: 인용별 판정</text>
+
+          <rect class="chip-new" x="932" y="50" width="238" height="120" rx="10"/>
+          <text class="chip-t" x="948" y="78">+ 새 모듈</text>
+          <rect class="dev" x="1086" y="64" width="72" height="22" rx="11"/>
+          <text class="dev-t" x="1122" y="79" text-anchor="middle">개발자 C</text>
+          <text class="code" x="948" y="110">handler(in, settings)</text>
+          <text class="body" x="948" y="140">Out: 직접 정의한 필드</text>
+
+          <!-- ① → ② -->
+          <line class="e-src" x1="310" y1="170" x2="310" y2="216" marker-end="url(#p-ahr)"/>
+          <text class="lbl t-src" x="320" y="198">Input</text>
+          <line class="e-ai" x1="538" y1="170" x2="538" y2="232" marker-end="url(#p-aha)"/>
+          <text class="lbl t-ai" x="548" y="198">registry 등록</text>
+          <line class="e-silver" x1="794" y1="170" x2="794" y2="232" marker-end="url(#p-ahs)"/>
+          <text class="lbl t-silver" x="804" y="198">registry 등록</text>
+          <line class="e-new" x1="1051" y1="170" x2="1051" y2="232" marker-end="url(#p-ahn)"/>
+          <text class="lbl" x="1061" y="198">등록하면 끼워짐</text>
+
+          <!-- ② Runner -->
+          <rect class="runner" x="210" y="218" width="970" height="130" rx="12"/>
+          <text class="ttl t-silver" x="226" y="246">Runner</text>
+          <text class="small" x="226" y="268">registry 순서대로 실행</text>
+          <text class="small" x="226" y="288">응답 1건마다 handler 호출</text>
+          <text class="small" x="226" y="308">In · Out 스키마 검증</text>
+          <text class="small" x="226" y="328">DB 읽기 · 쓰기 담당</text>
+
+          <rect class="chip-ai" x="420" y="234" width="236" height="98" rx="8"/>
+          <text class="chip-t t-ai" x="436" y="260">언급 추출</text>
+          <text class="small" x="436" y="282">handler 호출 → Out 검증</text>
+          <text class="body t-ai" x="436" y="314" style="font-weight:600">+ LLM Client 주입</text>
+
+          <rect class="chip" x="676" y="234" width="236" height="98" rx="8"/>
+          <text class="chip-t t-silver" x="692" y="260">인용 분류</text>
+          <text class="small" x="692" y="282">handler 호출 → Out 검증</text>
+          <text class="small" x="692" y="314">규칙 기반</text>
+
+          <rect class="chip-new" x="932" y="234" width="238" height="98" rx="8"/>
+          <text class="chip-t t-muted" x="948" y="260">빈 슬롯</text>
+          <text class="small" x="948" y="282">새 모듈을 등록하면 여기에</text>
+          <text class="small" x="948" y="314">등록 해제하면 빠짐</text>
+
+          <!-- ② → ③ -->
+          <line class="e-src" x1="345" y1="348" x2="345" y2="394" marker-end="url(#p-ahr)"/>
+          <text class="lbl t-src" x="355" y="376">공통 값</text>
+          <line class="e-ai" x1="538" y1="348" x2="538" y2="394" marker-end="url(#p-aha)"/>
+          <text class="lbl t-ai" x="548" y="376">Output 저장</text>
+          <line class="e-silver" x1="794" y1="348" x2="794" y2="394" marker-end="url(#p-ahs)"/>
+          <text class="lbl t-silver" x="804" y="376">Output 저장</text>
+          <line class="e-new" x1="1051" y1="348" x2="1051" y2="394" marker-end="url(#p-ahn)"/>
+          <text class="lbl" x="1061" y="376">Output 저장</text>
+
+          <!-- ③ OBT -->
+          <rect class="g-plain" x="210" y="396" width="70" height="60"/>
+          <rect class="g-src" x="280" y="396" width="130" height="60"/>
+          <rect class="g-ai" x="410" y="396" width="256" height="60"/>
+          <rect class="g-silver" x="666" y="396" width="256" height="60"/>
+          <line class="grid" x1="210" y1="430" x2="1180" y2="430"/>
+          <line class="grid" x1="210" y1="456" x2="1180" y2="456"/>
+          <line class="grid" x1="210" y1="488" x2="1180" y2="488"/>
+          <line class="grid" x1="210" y1="520" x2="1180" y2="520"/>
+          <line class="grid" x1="280" y1="396" x2="280" y2="552"/>
+          <line class="grid" x1="410" y1="396" x2="410" y2="552"/>
+          <line class="grid" x1="538" y1="430" x2="538" y2="552"/>
+          <line class="grid" x1="666" y1="396" x2="666" y2="552"/>
+          <line class="grid" x1="922" y1="396" x2="922" y2="552"/>
+          <rect class="new-col" x="924" y="398" width="254" height="152" rx="2"/>
+          <rect class="grid-obt" x="210" y="396" width="970" height="156" rx="2"/>
+
+          <text class="col-h" x="245" y="418" text-anchor="middle">응답</text>
+          <text class="col-h t-src" x="345" y="418" text-anchor="middle">공통</text>
+          <text class="col-h t-ai" x="538" y="418" text-anchor="middle">언급 추출 Output</text>
+          <text class="col-h t-silver" x="794" y="418" text-anchor="middle">인용 분류 Output</text>
+          <text class="col-h t-muted" x="1051" y="418" text-anchor="middle">새 모듈 Output</text>
+          <text class="col-d" x="345" y="448" text-anchor="middle">엔진 · 국가 · 언어</text>
+          <text class="col-d" x="474" y="448" text-anchor="middle">집계</text>
+          <text class="col-d" x="602" y="448" text-anchor="middle">위치</text>
+          <text class="col-d" x="794" y="448" text-anchor="middle">판정</text>
+          <text class="col-d" x="1051" y="448" text-anchor="middle">새 필드 (컬럼 추가)</text>
+
+          <text class="mini-t" x="245" y="477" text-anchor="middle">a</text>
+          <text class="mini-t" x="245" y="509" text-anchor="middle">b</text>
+          <text class="mini-t" x="245" y="541" text-anchor="middle">c</text>
+          <rect class="bar-src" x="310" y="468" width="70" height="8" rx="2"/>
+          <rect class="bar-src" x="310" y="500" width="70" height="8" rx="2"/>
+          <rect class="bar-src" x="310" y="532" width="70" height="8" rx="2"/>
+          <rect class="bar-ai" x="439" y="468" width="70" height="8" rx="2"/>
+          <rect class="bar-ai" x="439" y="500" width="70" height="8" rx="2"/>
+          <rect class="bar-ai" x="439" y="532" width="70" height="8" rx="2"/>
+          <rect class="bar-ai" x="567" y="468" width="70" height="8" rx="2"/>
+          <rect class="bar-ai" x="567" y="500" width="70" height="8" rx="2"/>
+          <rect class="bar-ai" x="567" y="532" width="70" height="8" rx="2"/>
+          <rect class="bar-silver" x="744" y="468" width="100" height="8" rx="2"/>
+          <rect class="bar-silver" x="744" y="500" width="100" height="8" rx="2"/>
+          <rect class="bar-silver" x="744" y="532" width="100" height="8" rx="2"/>
+          <rect class="bar-new" x="1001" y="468" width="100" height="8" rx="2"/>
+          <rect class="bar-new" x="1001" y="500" width="100" height="8" rx="2"/>
+          <rect class="bar-new" x="1001" y="532" width="100" height="8" rx="2"/>
+
+          <text class="small" x="210" y="584">컬럼 이름 = 모듈명_필드명 (예: s2_mention_rollups) · 새 모듈 Output은 OBT에 컬럼을 추가해서 저장</text>
+        </svg>
+      </div>
+      <figcaption>위에서 아래로 읽으면 됩니다. 같은 색을 따라가면 모듈 하나의 Output이 그 아래 OBT 컬럼 묶음으로 내려가는 게 보입니다. 모듈끼리는 서로의 코드를 몰라도 되고, Runner가 registry 순서대로 부르기만 합니다.</figcaption>
+    </figure>
+
+    <div class="kit">
+      <h3><span class="bd">M</span>모듈 하나의 구성</h3>
+      <dl>
+        <div><dt><code>handler.py</code></dt><dd>입력을 받아 Output을 반환하는 함수. DB에 직접 접근하지 않습니다.</dd></div>
+        <div><dt><code>In / Out 스키마</code></dt><dd>입출력 모델(Pydantic). Out 필드가 OBT 컬럼이 됩니다.</dd></div>
+        <div><dt><code>입력 SQL · 출력 테이블</code></dt><dd>Runner가 이걸 보고 입력을 읽고 결과를 적재합니다.</dd></div>
+        <div><dt class="ai"><code>PROMPTS</code><span class="ai-chip">AI</span></dt><dd>AI 모듈만 있습니다. 여기 등록된 프롬프트만 LLM으로 보낼 수 있습니다.</dd></div>
+      </dl>
+      <p class="add"><b>신규 모듈 추가:</b> registry에 등록(이름 · 선행 모듈 · AI 여부)하고, 위 4개를 구현하고, OBT에 컬럼을 정의하면 Runner가 의존 순서대로 호출해서 OBT에 저장합니다.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>목표 구조 기준입니다. 현재 develop은 회차 종료 후 실행되고, AI 모듈 4개의 Runner 연결은 개발 중(M09), ACR 집계는 아직 구현 전입니다. Bronze 수집 주기(30분)는 현재 방식 기준이라 확정이 필요하고, 회차 완료 · 버전 테이블의 값은 예시입니다.</p>
+  </footer>
+</main>
+</body>
+</html>
