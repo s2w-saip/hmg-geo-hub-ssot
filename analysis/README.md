@@ -8,8 +8,11 @@
 
 ## 여기에 두는 것
 
-- 추출 항목 정의: 엔티티→브랜드 매핑, 감성, 언급 유형, 언급 순위·첫 언급 위치, 인용 URL·출처 분류
-- 추출 규칙 버전
-- AI 모델
+- 추출 항목 정의: [extraction-items.md](extraction-items.md)
+  - AI가 필요한 항목: 언급 순위, 언급 유형, 감성, ACR 후보군 · 최종 선택, 출처 카테고리
+  - AI 없이 하는 항목: 분석 상태, 엔티티 → 브랜드 매핑, 인용 목록, URL 정규화([url-normalization.md](url-normalization.md))
+- 추출 규칙 버전: [rule-versions.md](rule-versions.md)
+- AI 모델: [ai-model.md](ai-model.md)
+- Non-AI 처리: [non-ai.md](non-ai.md)
 
 다른 파트도 읽어야 하는 내용은 `shared/`에 둔다.
