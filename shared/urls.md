@@ -6,6 +6,7 @@
 |---|---|---|
 | 서비스 저장소 | https://github.com/s2w-saip/hmg-geo-hub | 서비스 FE(`front/`), BE(`back/`) |
 | SSOT 저장소 | https://github.com/s2w-saip/hmg-geo-hub-ssot | 이 저장소 |
+| 지식그래프 저장소 | https://github.com/s2w-saip/hmg-geo-hub-kg | 지식그래프 설계 · 결정 · PoC(검수 화면, KG DB 스키마) |
 
 ## 서비스 (S2W 내부망)
 

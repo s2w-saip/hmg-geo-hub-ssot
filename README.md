@@ -1,6 +1,6 @@
 # hmg-geo-hub-ssot
 
-3파트 5인이 함께 보는 프로젝트 전체의 SSOT(Single Source of Truth).
+4파트 7인이 함께 보는 프로젝트 전체의 SSOT(Single Source of Truth).
 
 ## 대전제
 
@@ -13,6 +13,7 @@
 | 서비스 | 지표 정의와 계산(BFF), 화면, 지표 API, 프롬프트·기준정보 API | 김태호 |
 | 분석 | 응답에서 정보 추출(AI 모델) | 신민철, 박보규 |
 | 데이터 파이프라인 | 분석 입력 준비, Silver OBT 적재와 운영 반영 | 이시형, 김혜민 |
+| 지식그래프 | 자동차 엔티티 · 별칭 · 관계를 사람이 확인해 기준 판으로 발행(KG DB) | 양승용, 강희준 |
 
 수집(AI 엔진 질의, 응답 원문)은 앤써가 맡는다.
 
@@ -24,6 +25,7 @@
 | [service/](service/README.md) | 서비스(BFF): 지표 정의, 사전 집계, 캐시, 화면, 지표 API, 프롬프트·기준정보 API | 김태호 |
 | [analysis/](analysis/README.md) | 분석 모듈: 추출 항목 정의, 추출 규칙 버전, AI 모델 | 신민철, 박보규 |
 | [pipeline/](pipeline/README.md) | 데이터 파이프라인: 입력 준비, 스냅샷 적재·검증·운영 반영, 롤백 | 이시형, 김혜민 |
+| [knowledge-graph/](knowledge-graph/README.md) | 지식그래프: 목표 아키텍처, 처리 흐름과 역할, 받는 것 · 주는 것 | 양승용, 강희준 |
 
 ## 문서를 둘 곳
 
