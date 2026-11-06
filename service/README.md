@@ -16,3 +16,11 @@
 - GA4(AI 유입 전환): 추후 논의
 
 다른 파트도 읽어야 하는 내용은 `shared/`에 둔다.
+
+## 아키텍처
+
+허브 서버 분리 뒤의 목표 구조다.
+
+![서비스 아키텍처](service-architecture.png)
+
+원본: [service-architecture.html](service-architecture.html)
